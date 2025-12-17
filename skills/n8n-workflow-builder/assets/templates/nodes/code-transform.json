@@ -1,0 +1,116 @@
+{
+  "examples": [
+    {
+      "name": "Transform All Items",
+      "description": "Process all items at once",
+      "node": {
+        "name": "Transform",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\n\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    processed: true,\n    timestamp: new Date().toISOString()\n  }\n}));"
+        }
+      }
+    },
+    {
+      "name": "Filter Items",
+      "description": "Filter items based on condition",
+      "node": {
+        "name": "Filter",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\n\n// Filter active items\nreturn items\n  .filter(item => item.json.status === 'active')\n  .map(item => ({ json: item.json }));"
+        }
+      }
+    },
+    {
+      "name": "Aggregate Data",
+      "description": "Sum, count, or aggregate items",
+      "node": {
+        "name": "Aggregate",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\n\nconst total = items.reduce((sum, item) => sum + (item.json.amount || 0), 0);\nconst count = items.length;\nconst average = count > 0 ? total / count : 0;\n\nreturn {\n  json: {\n    total,\n    count,\n    average: average.toFixed(2)\n  }\n};"
+        }
+      }
+    },
+    {
+      "name": "Group By Field",
+      "description": "Group items by a field value",
+      "node": {
+        "name": "Group",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\n\nconst grouped = items.reduce((acc, item) => {\n  const key = item.json.category || 'other';\n  if (!acc[key]) acc[key] = [];\n  acc[key].push(item.json);\n  return acc;\n}, {});\n\nreturn Object.entries(grouped).map(([category, items]) => ({\n  json: { category, items, count: items.length }\n}));"
+        }
+      }
+    },
+    {
+      "name": "Validate Data",
+      "description": "Validate items and add error info",
+      "node": {
+        "name": "Validate",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const errors = [];\n  \n  if (!item.json.email) errors.push('Email required');\n  if (!item.json.name) errors.push('Name required');\n  if (item.json.email && !item.json.email.includes('@')) {\n    errors.push('Invalid email format');\n  }\n  \n  return {\n    json: {\n      ...item.json,\n      valid: errors.length === 0,\n      errors: errors.length > 0 ? errors : undefined\n    }\n  };\n});"
+        }
+      }
+    },
+    {
+      "name": "Hebrew RTL Processing",
+      "description": "Add RTL markers for Hebrew text",
+      "node": {
+        "name": "RTL Format",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const RTL = '\\u200F';\nconst LTR = '\\u200E';\n\nconst items = $input.all();\n\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    formatted_text: RTL + item.json.text,\n    // For mixed content\n    mixed_text: `${RTL}${item.json.hebrew}${LTR}${item.json.english}`\n  }\n}));"
+        }
+      }
+    },
+    {
+      "name": "HTTP Request in Code",
+      "description": "Make HTTP request using $helpers",
+      "node": {
+        "name": "Fetch Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const response = await $helpers.httpRequest({\n  method: 'GET',\n  url: 'https://api.example.com/data',\n  headers: {\n    'Authorization': `Bearer ${$env.API_KEY}`\n  }\n});\n\nreturn {\n  json: response\n};"
+        }
+      }
+    }
+  ],
+  "parameterReference": {
+    "mode": ["runOnceForAllItems", "runOnceForEachItem"]
+  },
+  "builtInVariables": [
+    "$input.all() - All input items",
+    "$input.first() - First input item",
+    "$input.item - Current item (in runOnceForEachItem)",
+    "$json - Current item's JSON",
+    "$env.VAR_NAME - Environment variable",
+    "$('NodeName').all() - Items from named node",
+    "$workflow.id - Workflow ID",
+    "$execution.id - Execution ID",
+    "$now - Current DateTime (Luxon)"
+  ]
+}

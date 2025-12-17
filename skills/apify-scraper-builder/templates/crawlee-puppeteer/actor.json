@@ -1,0 +1,10 @@
+{
+    "actorSpecification": 1,
+    "name": "puppeteer-scraper",
+    "version": "0.0",
+    "buildTag": "latest",
+    "minMemoryMbytes": 1024,
+    "maxMemoryMbytes": 8192,
+    "dockerfile": "./Dockerfile",
+    "input": "./input_schema.json"
+}

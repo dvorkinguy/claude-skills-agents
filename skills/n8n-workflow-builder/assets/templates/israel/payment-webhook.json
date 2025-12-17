@@ -1,0 +1,104 @@
+{
+  "stripeILS": {
+    "description": "Stripe integration with ILS currency",
+    "createCheckoutSession": {
+      "node": {
+        "name": "Create Checkout Session",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/checkout/sessions",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBasicAuth",
+          "sendBody": true,
+          "contentType": "form-urlencoded",
+          "bodyParameters": {
+            "parameters": [
+              {"name": "payment_method_types[]", "value": "card"},
+              {"name": "line_items[0][price_data][currency]", "value": "ils"},
+              {"name": "line_items[0][price_data][unit_amount]", "value": "={{ $json.amount * 100 }}"},
+              {"name": "line_items[0][price_data][product_data][name]", "value": "={{ $json.product_name }}"},
+              {"name": "line_items[0][quantity]", "value": "1"},
+              {"name": "mode", "value": "payment"},
+              {"name": "success_url", "value": "={{ $env.APP_URL }}/payment/success?session_id={CHECKOUT_SESSION_ID}"},
+              {"name": "cancel_url", "value": "={{ $env.APP_URL }}/payment/cancel"},
+              {"name": "locale", "value": "he"}
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "user": "{{STRIPE_SECRET_KEY}}",
+          "password": ""
+        }
+      }
+    },
+    "webhookHandler": {
+      "description": "Handle Stripe webhook events",
+      "verifySignature": {
+        "code": "const crypto = require('crypto');\nconst payload = $input.first().json;\nconst sig = $input.first().headers['stripe-signature'];\nconst secret = $env.STRIPE_WEBHOOK_SECRET;\n\nconst elements = sig.split(',');\nconst timestamp = elements.find(e => e.startsWith('t=')).slice(2);\nconst signature = elements.find(e => e.startsWith('v1=')).slice(3);\n\nconst signedPayload = `${timestamp}.${JSON.stringify(payload)}`;\nconst expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');\n\nif (signature !== expected) {\n  throw new Error('Invalid Stripe signature');\n}\n\nreturn { json: { verified: true, event: payload } };"
+      },
+      "eventHandling": {
+        "code": "const event = $json.event;\n\nswitch (event.type) {\n  case 'checkout.session.completed':\n    return {\n      json: {\n        event_type: 'payment_success',\n        session_id: event.data.object.id,\n        amount: event.data.object.amount_total / 100,\n        currency: event.data.object.currency,\n        customer_email: event.data.object.customer_details.email\n      }\n    };\n  case 'payment_intent.payment_failed':\n    return {\n      json: {\n        event_type: 'payment_failed',\n        error: event.data.object.last_payment_error?.message\n      }\n    };\n  default:\n    return { json: { event_type: 'other', type: event.type } };\n}"
+      }
+    }
+  },
+  "vatCalculation": {
+    "description": "Israeli VAT (17%) calculation",
+    "rate": 0.17,
+    "code": "const priceWithoutVat = $json.price;\nconst vatRate = 0.17;\nconst vatAmount = priceWithoutVat * vatRate;\nconst totalPrice = priceWithoutVat + vatAmount;\n\nreturn {\n  json: {\n    price_without_vat: priceWithoutVat,\n    vat_rate: '17%',\n    vat_amount: vatAmount.toFixed(2),\n    total_price: totalPrice.toFixed(2),\n    currency: 'ILS',\n    symbol: '₪'\n  }\n};"
+  },
+  "invoiceGeneration": {
+    "description": "Generate Israeli-compliant invoice data",
+    "requiredFields": [
+      "business_name",
+      "business_id (ח.פ./ע.מ.)",
+      "business_address",
+      "invoice_number",
+      "date",
+      "customer_name",
+      "items",
+      "subtotal",
+      "vat_amount",
+      "total"
+    ],
+    "code": "const items = $json.items;\nconst { DateTime } = require('luxon');\n\nconst subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);\nconst vat = subtotal * 0.17;\nconst total = subtotal + vat;\n\nreturn {\n  json: {\n    invoice_number: `INV-${Date.now()}`,\n    date: DateTime.now().setZone('Asia/Jerusalem').toFormat('dd/MM/yyyy'),\n    business: {\n      name: $env.BUSINESS_NAME,\n      id: $env.BUSINESS_ID,\n      address: $env.BUSINESS_ADDRESS\n    },\n    customer: {\n      name: $json.customer_name,\n      email: $json.customer_email,\n      phone: $json.customer_phone\n    },\n    items: items.map(item => ({\n      description: item.name,\n      quantity: item.quantity,\n      unit_price: item.price,\n      total: item.price * item.quantity\n    })),\n    subtotal: subtotal.toFixed(2),\n    vat_rate: '17%',\n    vat_amount: vat.toFixed(2),\n    total: total.toFixed(2),\n    currency: 'ILS'\n  }\n};"
+  },
+  "payPlusIntegration": {
+    "description": "PayPlus (Israeli payment provider) integration",
+    "createPayment": {
+      "node": {
+        "name": "PayPlus Payment",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.payplus.co.il/payments",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {"name": "Authorization", "value": "={{ $env.PAYPLUS_API_KEY }}"},
+              {"name": "Content-Type", "value": "application/json"}
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"payment_page_uid\": \"{{ $env.PAYPLUS_PAGE_UID }}\",\n  \"charge_method\": 1,\n  \"amount\": {{ $json.amount }},\n  \"currency_code\": \"ILS\",\n  \"sendEmailApproval\": true,\n  \"customer\": {\n    \"customer_name\": \"{{ $json.name }}\",\n    \"email\": \"{{ $json.email }}\",\n    \"phone\": \"{{ $json.phone }}\"\n  },\n  \"items\": [\n    {\n      \"name\": \"{{ $json.product_name }}\",\n      \"quantity\": 1,\n      \"price\": {{ $json.amount }}\n    }\n  ]\n}"
+        }
+      }
+    }
+  },
+  "bankTransfer": {
+    "description": "Israeli bank transfer details format",
+    "template": {
+      "bank_name": "{{BANK_NAME}}",
+      "bank_code": "{{BANK_CODE}}",
+      "branch_code": "{{BRANCH_CODE}}",
+      "account_number": "{{ACCOUNT_NUMBER}}",
+      "account_name": "{{ACCOUNT_NAME}}"
+    },
+    "hebrewMessage": "\\u200Fפרטי העברה בנקאית:\nבנק: {{bank_name}} ({{bank_code}})\nסניף: {{branch_code}}\nחשבון: {{account_number}}\nשם: {{account_name}}"
+  }
+}

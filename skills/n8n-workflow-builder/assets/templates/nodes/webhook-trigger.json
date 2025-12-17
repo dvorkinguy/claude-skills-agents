@@ -1,0 +1,80 @@
+{
+  "examples": [
+    {
+      "name": "Basic POST Webhook",
+      "description": "Simple webhook that accepts POST requests",
+      "node": {
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [250, 300],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "my-webhook",
+          "responseMode": "onReceived",
+          "options": {}
+        }
+      }
+    },
+    {
+      "name": "Authenticated Webhook",
+      "description": "Webhook with header authentication",
+      "node": {
+        "name": "Secure Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [250, 300],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "secure-endpoint",
+          "authentication": "headerAuth",
+          "responseMode": "onReceived",
+          "options": {
+            "rawBody": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Webhook with Custom Response",
+      "description": "Webhook that uses Respond to Webhook node",
+      "node": {
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [250, 300],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "custom-response",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {
+            "rawBody": true,
+            "responseContentType": "application/json"
+          }
+        }
+      }
+    },
+    {
+      "name": "GET Webhook",
+      "description": "Webhook for GET requests (useful for verification)",
+      "node": {
+        "name": "Verification Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [250, 300],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "verify",
+          "responseMode": "onReceived",
+          "options": {}
+        }
+      }
+    }
+  ],
+  "parameterReference": {
+    "httpMethod": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    "authentication": ["none", "basicAuth", "headerAuth"],
+    "responseMode": ["onReceived", "lastNode", "responseNode"]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "enabledPlugins": {
+    "my-first-plugin@test-marketplace": false,
+    "frontend-design@claude-code-plugins": true,
+    "customer-sales-automation@claude-code-workflows": true,
+    "code-documentation@claude-code-workflows": true,
+    "code-review@claude-code-plugins": true,
+    "ralph-wiggum@claude-code-plugins": true,
+    "document-skills@anthropic-agent-skills": true
+  },
+  "alwaysThinkingEnabled": true,
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(go:*)",
+      "Write(*)",
+      "Bash(ls:*)",
+      "Bash(git:*)",
+      "Update(*:*)",
+      "Bash(mv:*)",
+      "Bash(echo:*)",
+      "Bash(sed:*)",
+      "Bash(source:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pkill:*)",
+      "Bash(touch:*)",
+      "Bash(grep:*)",
+      "Bash(deadcode:*)",
+      "Bash(sqlite3:*)",
+      "Bash(curl:*)",
+      "Bash(rg:*)",
+      "Bash(chmod:*)",
+      "Bash(lsof:*)",
+      "Bash(make:*)",
+      "Bash(PORT=:*)",
+      "Bash(find:*)",
+      "Bash(docker:*)",
+      "Bash(poetry:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Update(*)"
+    ],
+    "deny": []
+  }
+}

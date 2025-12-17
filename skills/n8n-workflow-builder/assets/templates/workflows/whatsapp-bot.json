@@ -1,0 +1,306 @@
+{
+  "name": "WhatsApp Bot",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "whatsapp-webhook-id"
+    },
+    {
+      "id": "parse-message",
+      "name": "Parse Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\n\n// Extract message from WhatsApp webhook\nconst entry = data.entry?.[0];\nconst changes = entry?.changes?.[0];\nconst value = changes?.value;\nconst message = value?.messages?.[0];\nconst contact = value?.contacts?.[0];\n\nif (!message) {\n  // Status update, not a message\n  return {\n    json: {\n      type: 'status_update',\n      skip: true\n    }\n  };\n}\n\nreturn {\n  json: {\n    type: 'message',\n    from: message.from,\n    phone_id: value.metadata.phone_number_id,\n    message_id: message.id,\n    timestamp: message.timestamp,\n    contact_name: contact?.profile?.name || 'Unknown',\n    message_type: message.type,\n    text: message.text?.body || null,\n    interactive: message.interactive || null,\n    button_reply: message.interactive?.button_reply || null,\n    list_reply: message.interactive?.list_reply || null\n  }\n};"
+      }
+    },
+    {
+      "id": "check-message",
+      "name": "Is Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "message-switch",
+      "name": "Message Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [850, 200],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "rules": [
+            {
+              "output": 0,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message_type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "output": 1,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message_type }}",
+                    "rightValue": "interactive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "fallbackOutput": 2
+        }
+      }
+    },
+    {
+      "id": "process-text",
+      "name": "Process Text Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 100],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\nconst RTL = '\\u200F';\n\n// Process text message and generate response\nconst userText = data.text?.toLowerCase() || '';\n\nlet responseText;\nlet buttons = null;\n\nif (userText.includes('שלום') || userText.includes('hello')) {\n  responseText = RTL + 'שלום! איך אפשר לעזור לך היום?';\n  buttons = [\n    { id: 'help', title: 'עזרה' },\n    { id: 'info', title: 'מידע' }\n  ];\n} else {\n  responseText = RTL + 'תודה על ההודעה! נחזור אליך בהקדם.';\n}\n\nreturn {\n  json: {\n    ...data,\n    response_text: responseText,\n    response_buttons: buttons\n  }\n};"
+      }
+    },
+    {
+      "id": "process-interactive",
+      "name": "Process Interactive",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\nconst RTL = '\\u200F';\n\nconst buttonId = data.button_reply?.id || data.list_reply?.id;\n\nlet responseText;\n\nswitch (buttonId) {\n  case 'help':\n    responseText = RTL + 'איך אפשר לעזור? בחר מהאפשרויות:';\n    break;\n  case 'info':\n    responseText = RTL + 'מידע על השירות שלנו...';\n    break;\n  default:\n    responseText = RTL + 'תודה על הבחירה!';\n}\n\nreturn {\n  json: {\n    ...data,\n    response_text: responseText,\n    response_buttons: null\n  }\n};"
+      }
+    },
+    {
+      "id": "default-response",
+      "name": "Default Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1050, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "name": "response_text",
+              "value": "\\u200Fסליחה, לא הבנתי את ההודעה.",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "merge-responses",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1250, 200],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "send-message",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1450, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $json.phone_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.response_buttons ? JSON.stringify({\n  messaging_product: 'whatsapp',\n  to: $json.from,\n  type: 'interactive',\n  interactive: {\n    type: 'button',\n    body: { text: $json.response_text },\n    action: {\n      buttons: $json.response_buttons.map(b => ({\n        type: 'reply',\n        reply: { id: b.id, title: b.title }\n      }))\n    }\n  }\n}) : JSON.stringify({\n  messaging_product: 'whatsapp',\n  to: $json.from,\n  type: 'text',\n  text: { body: $json.response_text }\n}) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "WhatsApp API"
+        }
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Message": {
+      "main": [
+        [
+          {
+            "node": "Is Message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Message?": {
+      "main": [
+        [
+          {
+            "node": "Message Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Message Type": {
+      "main": [
+        [
+          {
+            "node": "Process Text Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Interactive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Default Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Text Message": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Interactive": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Response": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

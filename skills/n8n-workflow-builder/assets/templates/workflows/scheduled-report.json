@@ -1,0 +1,190 @@
+{
+  "name": "Scheduled Report",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-data",
+      "name": "Fetch Data from API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.RAILS_API_URL }}/api/v1/reports/daily_stats",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Rails API"
+        }
+      }
+    },
+    {
+      "id": "format-report",
+      "name": "Format Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const { DateTime } = require('luxon');\nconst data = $input.first().json;\n\nconst today = DateTime.now().setZone('Asia/Jerusalem').toFormat('dd/MM/yyyy');\n\n// Format numbers with commas\nconst formatNumber = (num) => num?.toLocaleString('he-IL') || '0';\nconst formatCurrency = (num) => `₪${formatNumber(num)}`;\n\n// Build report sections\nconst summary = [\n  `*דוח יומי - ${today}*`,\n  '',\n  '*סיכום:*',\n  `• משתמשים חדשים: ${formatNumber(data.new_users)}`,\n  `• לידים חדשים: ${formatNumber(data.new_leads)}`,\n  `• הכנסות: ${formatCurrency(data.revenue)}`,\n  '',\n  '*השוואה לאתמול:*`,\n  `• משתמשים: ${data.users_change > 0 ? '+' : ''}${data.users_change || 0}%`,\n  `• לידים: ${data.leads_change > 0 ? '+' : ''}${data.leads_change || 0}%`,\n  `• הכנסות: ${data.revenue_change > 0 ? '+' : ''}${data.revenue_change || 0}%`\n].join('\\n');\n\n// Email version (HTML)\nconst emailHtml = `\n<div dir=\"rtl\" style=\"font-family: Arial, sans-serif;\">\n  <h2>דוח יומי - ${today}</h2>\n  <table style=\"border-collapse: collapse; width: 100%;\">\n    <tr style=\"background: #f5f5f5;\">\n      <th style=\"padding: 10px; border: 1px solid #ddd;\">מדד</th>\n      <th style=\"padding: 10px; border: 1px solid #ddd;\">ערך</th>\n      <th style=\"padding: 10px; border: 1px solid #ddd;\">שינוי</th>\n    </tr>\n    <tr>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">משתמשים חדשים</td>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">${formatNumber(data.new_users)}</td>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">${data.users_change || 0}%</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">לידים</td>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">${formatNumber(data.new_leads)}</td>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">${data.leads_change || 0}%</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">הכנסות</td>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">${formatCurrency(data.revenue)}</td>\n      <td style=\"padding: 10px; border: 1px solid #ddd;\">${data.revenue_change || 0}%</td>\n    </tr>\n  </table>\n</div>\n`;\n\nreturn {\n  json: {\n    ...data,\n    report_date: today,\n    slack_message: summary,\n    email_html: emailHtml,\n    email_subject: `דוח יומי - ${today}`\n  }\n};"
+      }
+    },
+    {
+      "id": "send-slack",
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [850, 200],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#reports"
+        },
+        "text": "={{ $json.slack_message }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [850, 400],
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $env.REPORT_RECIPIENTS }}",
+        "subject": "={{ $json.email_subject }}",
+        "emailType": "html",
+        "html": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {}
+    },
+    {
+      "id": "error-notify",
+      "name": "Error Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [450, 500],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#alerts"
+        },
+        "text": "=:warning: *Report Generation Failed*\n\nError: {{ $json.message }}\nTime: {{ $now.toISO() }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Data from API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Data from API": {
+      "main": [
+        [
+          {
+            "node": "Format Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Report": {
+      "main": [
+        [
+          {
+            "node": "Send to Slack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

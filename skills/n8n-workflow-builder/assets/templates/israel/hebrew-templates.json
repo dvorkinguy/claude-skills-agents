@@ -1,0 +1,97 @@
+{
+  "rtlHandling": {
+    "description": "Unicode markers for RTL text handling",
+    "markers": {
+      "RTL_MARK": "\\u200F",
+      "LTR_MARK": "\\u200E",
+      "RTL_EMBED": "\\u202B",
+      "LTR_EMBED": "\\u202A",
+      "POP_DIRECTION": "\\u202C"
+    },
+    "usage": {
+      "hebrew_only": "\\u200F + hebrewText",
+      "mixed_content": "\\u200F + hebrew + \\u200E + english + \\u200F",
+      "numbers_in_hebrew": "\\u200F + text + \\u200E + number + \\u200F"
+    }
+  },
+  "commonTemplates": {
+    "welcome_message": {
+      "hebrew": "\\u200Fשלום {{name}}, ברוכים הבאים ל{{company}}!",
+      "variables": ["name", "company"]
+    },
+    "order_confirmation": {
+      "hebrew": "\\u200Fהזמנה מספר {{order_id}} התקבלה בהצלחה.\nסכום לתשלום: ₪{{amount}}",
+      "variables": ["order_id", "amount"]
+    },
+    "appointment_reminder": {
+      "hebrew": "\\u200Fתזכורת: יש לך פגישה ביום {{date}} בשעה {{time}}.\nכתובת: {{address}}",
+      "variables": ["date", "time", "address"]
+    },
+    "support_response": {
+      "hebrew": "\\u200Fתודה על פנייתך.\nמספר הפנייה שלך: {{ticket_id}}\nנחזור אליך בהקדם.",
+      "variables": ["ticket_id"]
+    },
+    "payment_received": {
+      "hebrew": "\\u200Fתשלום התקבל בהצלחה!\nסכום: ₪{{amount}}\nמספר אישור: {{confirmation}}",
+      "variables": ["amount", "confirmation"]
+    },
+    "shipping_update": {
+      "hebrew": "\\u200Fהמשלוח שלך בדרך!\nמספר מעקב: {{tracking}}\nצפי הגעה: {{eta}}",
+      "variables": ["tracking", "eta"]
+    }
+  },
+  "errorMessages": {
+    "validation": {
+      "email_invalid": "\\u200Fכתובת אימייל לא תקינה",
+      "phone_invalid": "\\u200Fמספר טלפון לא תקין",
+      "required_field": "\\u200Fשדה חובה",
+      "min_length": "\\u200Fנדרשים לפחות {{min}} תווים",
+      "max_length": "\\u200Fמותר עד {{max}} תווים"
+    },
+    "system": {
+      "general_error": "\\u200Fאירעה שגיאה, אנא נסה שוב",
+      "not_found": "\\u200Fלא נמצא",
+      "unauthorized": "\\u200Fאין הרשאה",
+      "timeout": "\\u200Fהזמן המוקצב פג"
+    }
+  },
+  "n8nCodePatterns": {
+    "applyRtl": {
+      "description": "Apply RTL to Hebrew text",
+      "code": "const RTL = '\\u200F';\nconst text = $json.message;\nreturn { json: { formatted: RTL + text } };"
+    },
+    "formatMixed": {
+      "description": "Format mixed Hebrew/English content",
+      "code": "const RTL = '\\u200F';\nconst LTR = '\\u200E';\nconst hebrew = $json.hebrew;\nconst english = $json.english;\nreturn { json: { formatted: `${RTL}${hebrew}${LTR}${english}${RTL}` } };"
+    },
+    "formatCurrency": {
+      "description": "Format ILS currency",
+      "code": "const amount = $json.amount;\nconst formatted = `₪${amount.toLocaleString('he-IL')}`;\nreturn { json: { formatted } };"
+    },
+    "formatPhone": {
+      "description": "Format Israeli phone number",
+      "code": "let phone = $json.phone.replace(/\\D/g, '');\nif (phone.startsWith('0')) {\n  phone = '972' + phone.slice(1);\n} else if (!phone.startsWith('972')) {\n  phone = '972' + phone;\n}\nreturn { json: { formatted_phone: phone } };"
+    },
+    "formatDate": {
+      "description": "Format date in Hebrew locale",
+      "code": "const { DateTime } = require('luxon');\nconst date = DateTime.fromISO($json.date)\n  .setZone('Asia/Jerusalem')\n  .setLocale('he');\nreturn {\n  json: {\n    date_short: date.toFormat('dd/MM/yyyy'),\n    date_long: date.toFormat('EEEE, d MMMM yyyy'),\n    time: date.toFormat('HH:mm')\n  }\n};"
+    }
+  },
+  "calendarIntegration": {
+    "description": "Hebrew calendar and timezone handling",
+    "timezone": "Asia/Jerusalem",
+    "locale": "he",
+    "dateFormats": {
+      "short": "dd/MM/yyyy",
+      "long": "EEEE, d בMMMM yyyy",
+      "time": "HH:mm"
+    },
+    "holidays": {
+      "note": "Consider Israeli holidays in scheduling (Shabbat, Jewish holidays)",
+      "shabbat": {
+        "start": "Friday sunset",
+        "end": "Saturday night"
+      }
+    }
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "messageTypes": {
+    "text": {
+      "description": "Simple text message",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "text",
+        "text": {
+          "preview_url": false,
+          "body": "\\u200F{{MESSAGE_TEXT}}"
+        }
+      },
+      "notes": "Add \\u200F (RTL mark) at start for Hebrew text"
+    },
+    "template": {
+      "description": "Pre-approved template message (required for first message)",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "template",
+        "template": {
+          "name": "{{TEMPLATE_NAME}}",
+          "language": {
+            "code": "he"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {"type": "text", "text": "{{PARAM_1}}"},
+                {"type": "text", "text": "{{PARAM_2}}"}
+              ]
+            }
+          ]
+        }
+      },
+      "notes": "Template must be approved by Meta first. Use language code 'he' for Hebrew"
+    },
+    "interactive_buttons": {
+      "description": "Message with up to 3 reply buttons",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "interactive",
+        "interactive": {
+          "type": "button",
+          "body": {
+            "text": "\\u200F{{BODY_TEXT}}"
+          },
+          "action": {
+            "buttons": [
+              {
+                "type": "reply",
+                "reply": {
+                  "id": "btn_1",
+                  "title": "אישור"
+                }
+              },
+              {
+                "type": "reply",
+                "reply": {
+                  "id": "btn_2",
+                  "title": "ביטול"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "notes": "Max 3 buttons, max 20 chars per button title"
+    },
+    "interactive_list": {
+      "description": "Message with selectable list items",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "interactive",
+        "interactive": {
+          "type": "list",
+          "header": {
+            "type": "text",
+            "text": "\\u200Fבחר אפשרות"
+          },
+          "body": {
+            "text": "\\u200Fהנה האפשרויות הזמינות:"
+          },
+          "footer": {
+            "text": "\\u200Fבחר מהרשימה"
+          },
+          "action": {
+            "button": "הצג אפשרויות",
+            "sections": [
+              {
+                "title": "קטגוריה א",
+                "rows": [
+                  {
+                    "id": "opt_1",
+                    "title": "אפשרות 1",
+                    "description": "תיאור אפשרות 1"
+                  },
+                  {
+                    "id": "opt_2",
+                    "title": "אפשרות 2",
+                    "description": "תיאור אפשרות 2"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "notes": "Max 10 items per section, max 10 sections"
+    },
+    "image": {
+      "description": "Image message",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "image",
+        "image": {
+          "link": "{{IMAGE_URL}}",
+          "caption": "\\u200F{{CAPTION}}"
+        }
+      },
+      "notes": "Supports JPEG, PNG. Max 5MB"
+    },
+    "document": {
+      "description": "Document/file message",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "document",
+        "document": {
+          "link": "{{DOCUMENT_URL}}",
+          "filename": "{{FILENAME}}",
+          "caption": "\\u200F{{CAPTION}}"
+        }
+      },
+      "notes": "Supports PDF, Office docs, etc. Max 100MB"
+    },
+    "location": {
+      "description": "Location message",
+      "payload": {
+        "messaging_product": "whatsapp",
+        "to": "{{PHONE_NUMBER}}",
+        "type": "location",
+        "location": {
+          "latitude": "{{LAT}}",
+          "longitude": "{{LONG}}",
+          "name": "{{LOCATION_NAME}}",
+          "address": "{{ADDRESS}}"
+        }
+      }
+    }
+  },
+  "hebrewPhrases": {
+    "greetings": {
+      "hello": "\\u200Fשלום",
+      "good_morning": "\\u200Fבוקר טוב",
+      "good_evening": "\\u200Fערב טוב",
+      "goodbye": "\\u200Fלהתראות",
+      "welcome": "\\u200Fברוכים הבאים"
+    },
+    "responses": {
+      "thank_you": "\\u200Fתודה רבה",
+      "youre_welcome": "\\u200Fבבקשה",
+      "sorry": "\\u200Fסליחה",
+      "understood": "\\u200Fהבנתי",
+      "please_wait": "\\u200Fאנא המתן"
+    },
+    "actions": {
+      "confirm": "\\u200Fאישור",
+      "cancel": "\\u200Fביטול",
+      "continue": "\\u200Fהמשך",
+      "back": "\\u200Fחזרה",
+      "help": "\\u200Fעזרה",
+      "menu": "\\u200Fתפריט"
+    },
+    "status": {
+      "processing": "\\u200Fבטיפול",
+      "completed": "\\u200Fהושלם",
+      "pending": "\\u200Fממתין",
+      "failed": "\\u200Fנכשל",
+      "success": "\\u200Fהצליח"
+    }
+  },
+  "webhookPayloadParsing": {
+    "description": "How to parse incoming WhatsApp webhooks",
+    "code": "const data = $input.first().json;\n\n// Extract from webhook structure\nconst entry = data.entry?.[0];\nconst changes = entry?.changes?.[0];\nconst value = changes?.value;\nconst message = value?.messages?.[0];\nconst contact = value?.contacts?.[0];\n\nif (!message) {\n  return { json: { type: 'status_update', skip: true } };\n}\n\nreturn {\n  json: {\n    from: message.from,\n    phone_id: value.metadata.phone_number_id,\n    message_id: message.id,\n    timestamp: message.timestamp,\n    contact_name: contact?.profile?.name,\n    type: message.type,\n    text: message.text?.body,\n    button_id: message.interactive?.button_reply?.id,\n    list_id: message.interactive?.list_reply?.id\n  }\n};"
+  }
+}

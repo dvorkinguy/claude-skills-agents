@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "plugins": {
+    "my-first-plugin@test-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/test-marketplace/my-first-plugin/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-11-05T15:54:48.437Z",
+        "lastUpdated": "2025-11-05T15:54:48.437Z",
+        "gitCommitSha": "c130b4eabd43872040974a9d3bc669bf9a6c9d4b",
+        "isLocal": true
+      }
+    ],
+    "frontend-design@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/claude-code-plugins/frontend-design/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-12-03T09:14:24.565Z",
+        "lastUpdated": "2025-12-03T09:14:24.565Z",
+        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed",
+        "isLocal": true
+      }
+    ],
+    "customer-sales-automation@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/claude-code-workflows/customer-sales-automation/51c85a89771e",
+        "version": "51c85a89771e",
+        "installedAt": "2025-12-03T09:14:24.565Z",
+        "lastUpdated": "2025-12-03T09:14:24.565Z",
+        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4",
+        "isLocal": true
+      }
+    ],
+    "code-documentation@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/claude-code-workflows/code-documentation/51c85a89771e",
+        "version": "51c85a89771e",
+        "installedAt": "2025-12-03T09:14:24.565Z",
+        "lastUpdated": "2025-12-03T09:14:24.565Z",
+        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4",
+        "isLocal": true
+      }
+    ],
+    "code-review@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/claude-code-plugins/code-review/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-12-03T09:14:24.565Z",
+        "lastUpdated": "2025-12-03T09:14:24.565Z",
+        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed",
+        "isLocal": true
+      }
+    ],
+    "ralph-wiggum@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/claude-code-plugins/ralph-wiggum/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2025-12-03T09:14:24.565Z",
+        "lastUpdated": "2025-12-03T09:14:24.565Z",
+        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed",
+        "isLocal": true
+      }
+    ],
+    "document-skills@anthropic-agent-skills": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/anthropic-agent-skills/document-skills/00756142ab04",
+        "version": "00756142ab04",
+        "installedAt": "2025-12-08T19:38:29.779Z",
+        "lastUpdated": "2025-12-08T19:38:29.779Z",
+        "gitCommitSha": "00756142ab04c82a447693cf373c4e0c554d1005",
+        "isLocal": true
+      }
+    ]
+  }
+}

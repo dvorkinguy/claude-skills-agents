@@ -1,0 +1,267 @@
+{
+  "examples": [
+    {
+      "name": "String Equals",
+      "description": "Check if string field equals value",
+      "node": {
+        "name": "Check Status",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "active",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    },
+    {
+      "name": "String Contains",
+      "description": "Check if string contains substring",
+      "node": {
+        "name": "Contains Check",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "error",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    },
+    {
+      "name": "Number Greater Than",
+      "description": "Check if number is greater than threshold",
+      "node": {
+        "name": "Amount Check",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.amount }}",
+                "rightValue": 100,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    },
+    {
+      "name": "Boolean Check",
+      "description": "Check if boolean field is true",
+      "node": {
+        "name": "Is Active",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.active }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    },
+    {
+      "name": "Field Exists",
+      "description": "Check if field exists and is not empty",
+      "node": {
+        "name": "Has Email",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.email }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    },
+    {
+      "name": "Multiple Conditions (AND)",
+      "description": "All conditions must be true",
+      "node": {
+        "name": "Multiple Check",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "active",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "leftValue": "={{ $json.verified }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    },
+    {
+      "name": "Multiple Conditions (OR)",
+      "description": "Any condition can be true",
+      "node": {
+        "name": "Either Check",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.type }}",
+                "rightValue": "admin",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "leftValue": "={{ $json.type }}",
+                "rightValue": "moderator",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          }
+        }
+      }
+    },
+    {
+      "name": "Regex Match",
+      "description": "Check if field matches regex pattern",
+      "node": {
+        "name": "Email Format",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [450, 300],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.email }}",
+                "rightValue": "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+                "operator": {
+                  "type": "string",
+                  "operation": "regex"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      }
+    }
+  ],
+  "parameterReference": {
+    "stringOperations": ["equals", "notEquals", "contains", "notContains", "startsWith", "endsWith", "regex"],
+    "numberOperations": ["equals", "notEquals", "gt", "gte", "lt", "lte"],
+    "booleanOperations": ["true", "false"],
+    "arrayOperations": ["contains", "notContains", "lengthEquals", "lengthGt", "lengthLt"],
+    "combinator": ["and", "or"]
+  }
+}

@@ -1,0 +1,79 @@
+---
+name: n8n-workflow-builder
+description: Build n8n automation workflows. Use when creating n8n workflows, automation sequences, or integrating with n8n webhooks. Handles workflow JSON generation, node configuration, and webhook setup.
+---
+
+# n8n Workflow Builder
+
+## Overview
+This skill helps create production-ready n8n workflows with proper error handling, webhook configuration, and node setup.
+
+## Workflow Structure
+n8n workflows are JSON files with this structure:
+```json
+{
+  "name": "Workflow Name",
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
+```
+
+## Common Node Types
+
+### Webhook Trigger
+```json
+{
+  "name": "Webhook",
+  "type": "n8n-nodes-base.webhook",
+  "position": [250, 300],
+  "parameters": {
+    "httpMethod": "POST",
+    "path": "your-webhook-path",
+    "responseMode": "onReceived"
+  }
+}
+```
+
+### HTTP Request
+```json
+{
+  "name": "HTTP Request",
+  "type": "n8n-nodes-base.httpRequest",
+  "position": [450, 300],
+  "parameters": {
+    "method": "POST",
+    "url": "https://api.example.com/endpoint",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth"
+  }
+}
+```
+
+### Code Node (JavaScript)
+```json
+{
+  "name": "Transform Data",
+  "type": "n8n-nodes-base.code",
+  "position": [650, 300],
+  "parameters": {
+    "jsCode": "return items.map(item => ({ json: { transformed: item.json } }));"
+  }
+}
+```
+
+## Best Practices
+1. Always add error handling nodes
+2. Use environment variables for credentials
+3. Add "No Operation" nodes for branching clarity
+4. Test with sample data before production
+5. Document workflow purpose in description
+
+## Validation
+Run `scripts/validate_workflow.py` to check:
+- All required fields present
+- Node connections valid
+- No orphan nodes
+- Credentials referenced correctly

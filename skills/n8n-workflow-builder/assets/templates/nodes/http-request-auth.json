@@ -1,0 +1,156 @@
+{
+  "examples": [
+    {
+      "name": "Bearer Token Auth",
+      "description": "HTTP request with Bearer token authentication",
+      "node": {
+        "name": "API Call",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [450, 300],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.example.com/data",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {
+            "timeout": 30000
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer YOUR_TOKEN"
+        }
+      }
+    },
+    {
+      "name": "Basic Auth",
+      "description": "HTTP request with basic authentication",
+      "node": {
+        "name": "API Call",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [450, 300],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.example.com/data",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBasicAuth",
+          "options": {}
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "user": "username",
+          "password": "password"
+        }
+      }
+    },
+    {
+      "name": "Custom Header Auth",
+      "description": "HTTP request with custom API key header",
+      "node": {
+        "name": "API Call",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [450, 300],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.example.com/endpoint",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-API-Key",
+                "value": "={{ $env.API_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 30000
+          }
+        }
+      }
+    },
+    {
+      "name": "POST with JSON Body",
+      "description": "POST request with JSON body",
+      "node": {
+        "name": "Send Data",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [450, 300],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.example.com/create",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"name\": \"{{ $json.name }}\",\n  \"email\": \"{{ $json.email }}\",\n  \"data\": {{ JSON.stringify($json.data) }}\n}",
+          "options": {
+            "timeout": 30000,
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Form URL Encoded",
+      "description": "POST request with form data",
+      "node": {
+        "name": "Form Submit",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [450, 300],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.example.com/form",
+          "sendBody": true,
+          "contentType": "form-urlencoded",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "field1",
+                "value": "={{ $json.field1 }}"
+              },
+              {
+                "name": "field2",
+                "value": "={{ $json.field2 }}"
+              }
+            ]
+          },
+          "options": {}
+        }
+      }
+    }
+  ],
+  "parameterReference": {
+    "method": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+    "genericAuthType": ["httpBasicAuth", "httpHeaderAuth", "httpDigestAuth", "httpQueryAuth", "oAuth1Api", "oAuth2Api"],
+    "contentType": ["json", "form-urlencoded", "multipart-form-data", "raw"],
+    "responseFormat": ["json", "text", "file"]
+  }
+}

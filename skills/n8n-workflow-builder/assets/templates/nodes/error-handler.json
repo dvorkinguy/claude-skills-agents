@@ -1,0 +1,138 @@
+{
+  "examples": [
+    {
+      "name": "Error Trigger",
+      "description": "Catch workflow errors",
+      "node": {
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [250, 500],
+        "parameters": {}
+      }
+    },
+    {
+      "name": "Error Notification Flow",
+      "description": "Complete error handling with notification",
+      "nodes": [
+        {
+          "name": "Error Trigger",
+          "type": "n8n-nodes-base.errorTrigger",
+          "typeVersion": 1,
+          "position": [250, 500],
+          "parameters": {}
+        },
+        {
+          "name": "Format Error",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [450, 500],
+          "parameters": {
+            "mode": "runOnceForAllItems",
+            "jsCode": "const error = $input.first().json;\n\nconst formatted = {\n  workflow_name: error.workflow?.name || 'Unknown',\n  node_name: error.execution?.lastNodeExecuted || 'Unknown',\n  error_message: error.message || 'No message',\n  error_stack: error.stack || '',\n  timestamp: new Date().toISOString(),\n  execution_id: $execution.id\n};\n\nreturn { json: formatted };"
+          }
+        },
+        {
+          "name": "Send Alert",
+          "type": "n8n-nodes-base.slack",
+          "typeVersion": 2.2,
+          "position": [650, 500],
+          "parameters": {
+            "resource": "message",
+            "operation": "post",
+            "channel": {
+              "__rl": true,
+              "mode": "name",
+              "value": "#alerts"
+            },
+            "text": "=:rotating_light: *Workflow Error*\n\n*Workflow:* {{ $json.workflow_name }}\n*Node:* {{ $json.node_name }}\n*Error:* {{ $json.error_message }}\n*Time:* {{ $json.timestamp }}\n*Execution:* {{ $json.execution_id }}",
+            "otherOptions": {
+              "mrkdwn": true
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Error Trigger": {
+          "main": [
+            [
+              {
+                "node": "Format Error",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Format Error": {
+          "main": [
+            [
+              {
+                "node": "Send Alert",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "Stop and Error",
+      "description": "Stop workflow with custom error",
+      "node": {
+        "name": "Stop and Error",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [650, 400],
+        "parameters": {
+          "errorMessage": "Validation failed: {{ $json.errors.join(', ') }}"
+        }
+      }
+    },
+    {
+      "name": "Try-Catch Pattern",
+      "description": "Use IF to handle errors gracefully",
+      "workflow_pattern": {
+        "description": "Pattern for graceful error handling",
+        "nodes": [
+          "Main Process Node",
+          "IF (Check for error)",
+          "Success Path",
+          "Error Path"
+        ],
+        "code_example": "// In Code node, wrap in try-catch\ntry {\n  // Main logic\n  const result = someOperation();\n  return { json: { success: true, result } };\n} catch (error) {\n  return {\n    json: {\n      success: false,\n      error: error.message\n    }\n  };\n}"
+      }
+    },
+    {
+      "name": "Log Error to Database",
+      "description": "Store error details for analysis",
+      "node": {
+        "name": "Log to DB",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [650, 500],
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.ERROR_LOG_URL }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"workflow_id\": \"{{ $workflow.id }}\",\n  \"execution_id\": \"{{ $execution.id }}\",\n  \"error_message\": \"{{ $json.message }}\",\n  \"error_node\": \"{{ $json.node }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\",\n  \"environment\": \"{{ $env.NODE_ENV }}\"\n}",
+          "options": {
+            "timeout": 5000
+          }
+        }
+      }
+    }
+  ],
+  "bestPractices": [
+    "Always include Error Trigger node in production workflows",
+    "Send notifications for critical errors (Slack, email, etc.)",
+    "Log errors with context (workflow name, node, timestamp)",
+    "Use try-catch in Code nodes for graceful handling",
+    "Include execution ID for debugging",
+    "Consider different handling for different error types"
+  ]
+}

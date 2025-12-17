@@ -1,0 +1,65 @@
+{
+	"servers": {
+		"github": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"gallery": true
+		},
+		"huggingface": {
+			"type": "http",
+			"url": "https://hf.co/mcp",
+			"gallery": true
+		},
+		"markitdown": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"markitdown-mcp"
+			],
+			"gallery": true
+		},
+		"apify": {
+			"type": "http",
+			"url": "https://mcp.apify.com",
+			"gallery": true
+		},
+		"playwright": {
+			"command": "npx",
+			"args": [
+				"@playwright/mcp@latest"
+			],
+			"type": "stdio"
+		},
+		"n8n-mcp": {
+			"command": "npx",
+			"args": [
+				"n8n-mcp"
+			],
+			"env": {
+				"MCP_MODE": "stdio",
+				"LOG_LEVEL": "error",
+				"DISABLE_CONSOLE_OUTPUT": "true",
+				"N8N_API_URL": "https://n8n.guydvorkin.com/api/v1",
+				"N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3Mzg4MmEwYS1lNzk0LTQwY2MtYjA0MC04N2ZkNzc0ZmVlNWEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY1NzQwNjI1fQ.YgoKg47u0Uk4F76LrPOEV6iUUXSPs2Kg_Z14LRvzT2s"
+			},
+			"type": "stdio"
+		},
+		"io.github.github/github-mcp-server": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"headers": {
+				"Authorization": "${input:Authorization}"
+			},
+			"gallery": "https://api.mcp.github.com/2025-09-15/v0/servers/ee28ae1f-656e-4988-a7d1-f80cea9c5b43",
+			"version": "0.24.0"
+		}
+	},
+	"inputs": [
+		{
+			"id": "Authorization",
+			"type": "promptString",
+			"description": "Authentication token (PAT or App token)",
+			"password": true
+		}
+	]
+}

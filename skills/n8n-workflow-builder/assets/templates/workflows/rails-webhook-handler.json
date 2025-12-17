@@ -1,0 +1,366 @@
+{
+  "name": "Rails Webhook Handler",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Rails Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rails-event",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "rails-webhook-id"
+    },
+    {
+      "id": "verify-signature",
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const crypto = require('crypto');\n\nconst data = $input.first();\nconst headers = data.json.headers || {};\nconst body = data.json.body || data.json;\n\n// Get signature from header\nconst signature = headers['x-webhook-secret'] || headers['X-Webhook-Secret'];\nconst secret = $env.RAILS_WEBHOOK_SECRET;\n\n// Calculate expected signature\nconst payload = typeof body === 'string' ? body : JSON.stringify(body);\nconst expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');\n\n// Verify\nconst isValid = signature && crypto.timingSafeEqual(\n  Buffer.from(signature),\n  Buffer.from(expected)\n);\n\nif (!isValid) {\n  throw new Error('Invalid webhook signature');\n}\n\nreturn {\n  json: {\n    ...body,\n    verified: true,\n    received_at: new Date().toISOString()\n  }\n};"
+      }
+    },
+    {
+      "id": "event-router",
+      "name": "Route by Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [650, 300],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "rules": [
+            {
+              "output": 0,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "user.created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "output": 1,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "order.completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "output": 2,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "payment.received",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "fallbackOutput": 3
+        }
+      }
+    },
+    {
+      "id": "handle-user-created",
+      "name": "Handle User Created",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 100],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\n\n// Process new user event\nconst user = data.payload || data;\n\nreturn {\n  json: {\n    event: 'user.created',\n    user_id: user.id,\n    email: user.email,\n    name: user.name,\n    action: 'send_welcome_email',\n    processed: true\n  }\n};"
+      }
+    },
+    {
+      "id": "handle-order-completed",
+      "name": "Handle Order Completed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 250],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\n\n// Process order completed event\nconst order = data.payload || data;\n\nreturn {\n  json: {\n    event: 'order.completed',\n    order_id: order.id,\n    user_id: order.user_id,\n    total: order.total,\n    action: 'send_confirmation',\n    processed: true\n  }\n};"
+      }
+    },
+    {
+      "id": "handle-payment",
+      "name": "Handle Payment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\n\n// Process payment event\nconst payment = data.payload || data;\n\nreturn {\n  json: {\n    event: 'payment.received',\n    payment_id: payment.id,\n    amount: payment.amount,\n    currency: payment.currency || 'ILS',\n    action: 'update_records',\n    processed: true\n  }\n};"
+      }
+    },
+    {
+      "id": "handle-unknown",
+      "name": "Handle Unknown Event",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 550],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "string"
+            },
+            {
+              "name": "action",
+              "value": "logged_only",
+              "type": "string"
+            },
+            {
+              "name": "processed",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "merge",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1100, 300],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "callback-rails",
+      "name": "Callback to Rails",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RAILS_API_URL }}/api/v1/webhooks/n8n_callback",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event_type\": \"processing_complete\",\n  \"original_event\": \"{{ $json.event }}\",\n  \"action_taken\": \"{{ $json.action }}\",\n  \"processed_at\": \"{{ $now.toISO() }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1500, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"received\": true,\n  \"event\": \"{{ $('Verify Signature').first().json.event }}\",\n  \"processed\": true\n}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 550],
+      "parameters": {}
+    },
+    {
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [450, 550],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": true,\n  \"message\": \"{{ $json.message }}\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Rails Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Signature": {
+      "main": [
+        [
+          {
+            "node": "Route by Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Event": {
+      "main": [
+        [
+          {
+            "node": "Handle User Created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Order Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Payment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Unknown Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle User Created": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Order Completed": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Payment": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Unknown Event": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Callback to Rails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback to Rails": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
