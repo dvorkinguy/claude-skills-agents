@@ -1,7 +1,7 @@
 ---
 name: ux-researcher
 description: UX research expert. Use for user research, journey maps, and validating design decisions.
-model: sonnet
+model: opus
 tools: Read, Write, Grep
 ---
 

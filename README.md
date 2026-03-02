@@ -1,120 +1,42 @@
 # Claude Code Configuration Backup
 
-This folder contains a backup of Claude Code configuration for restoration on another machine.
+Last synced: **2026-03-02**
 
 ## Contents
 
 | Folder | Description | Count |
 |--------|-------------|-------|
-| `skills/` | Custom skills with scripts, templates, references | 13 skills |
-| `agents/` | Agent definitions (specialized AI personas) | 26 agents |
+| `skills/` | Custom skills with scripts, templates, references | 58 skills |
+| `agents/` | Agent definitions (specialized AI personas) | 25 agents |
 | `commands/` | Custom slash commands | 1 command |
 | `plugins/` | Plugin registry (not cache) | 3 files |
-| `mcp/` | MCP server configurations | 3 files |
-| `settings/` | Global settings and instructions | 3 files |
+| `mcp/` | MCP server configurations (secrets replaced with `${VAR}`) | 1 file |
+| `settings/` | Global + local settings | 2 files |
+| `CLAUDE.md` | Global instructions | |
+| `ENV_CHECKLIST.md` | Environment requirements | |
+| `SETUP_GUIDE.md` | Setup documentation | |
+| `statusline.sh` | Status line script | |
 
-## Restoration Instructions
+## Restoration
 
-### Prerequisites
-1. Install Claude Code CLI: `npm install -g @anthropic-ai/claude-code`
-2. Authenticate: `claude login`
-
-### Step 1: Restore Skills
 ```bash
+# Quick restore
 cp -r skills/* ~/.claude/skills/
-```
-
-### Step 2: Restore Agents
-```bash
 cp -r agents/* ~/.claude/agents/
-```
-
-### Step 3: Restore Commands
-```bash
-mkdir -p ~/.claude/commands/
 cp -r commands/* ~/.claude/commands/
-```
-
-### Step 4: Restore Settings
-```bash
-cp settings/CLAUDE.md ~/.claude/
-cp settings/settings.json ~/.claude/
-cp settings/settings.local.json ~/.claude/
-```
-
-### Step 5: Restore Plugin Configuration
-```bash
-mkdir -p ~/.claude/plugins/
+cp settings/* ~/.claude/
 cp plugins/* ~/.claude/plugins/
+cp mcp/mcp.json ~/.claude/mcp.json
+cp CLAUDE.md ~/.claude/
+cp ENV_CHECKLIST.md ~/.claude/ 2>/dev/null
+cp SETUP_GUIDE.md ~/.claude/ 2>/dev/null
+cp statusline.sh ~/.claude/ 2>/dev/null
 ```
 
-Then reinstall plugins:
-```bash
-claude plugins install
-```
-
-### Step 6: Restore MCP Configurations
-
-**For Claude Code CLI:**
-```bash
-mkdir -p ~/.config/claude-code/
-cp mcp/claude-code-mcp.json ~/.config/claude-code/mcp.json
-```
-
-**For Claude Desktop (if using):**
-```bash
-mkdir -p ~/.config/claude-desktop/
-cp mcp/claude_desktop_config.json ~/.config/claude-desktop/
-```
-
-**For VS Code Extension (if using):**
-```bash
-mkdir -p ~/.config/Code/User/
-cp mcp/vscode-mcp.json ~/.config/Code/User/mcp.json
-```
-
-### Step 7: Update MCP Server Paths
-
-After restoring, edit the MCP config files to update any absolute paths that reference the old machine's directory structure.
+Then update `~/.claude/mcp.json` with real API keys for: `N8N_API_KEY`, `ATTIO_API_KEY`, `CLERK_API_KEY`.
 
 ## What's NOT Included
 
-- **API Keys** (`~/.claude/config.json`) - Re-authenticate with `claude login`
-- **OAuth Credentials** (`~/.claude/.credentials.json`) - Re-authenticate
-- **Plugin Cache** - Plugins will be re-downloaded from marketplaces
-- **Session Data** - Regenerates automatically
-- **Debug Logs** - Not needed
-
-## Quick Restore Script
-
-Create a script `restore-claude.sh`:
-```bash
-#!/bin/bash
-BACKUP_DIR="$(dirname "$0")"
-
-# Create directories
-mkdir -p ~/.claude/{skills,agents,commands,plugins}
-mkdir -p ~/.config/{claude-code,claude-desktop}
-mkdir -p ~/.config/Code/User
-
-# Copy configuration
-cp -r "$BACKUP_DIR/skills/"* ~/.claude/skills/
-cp -r "$BACKUP_DIR/agents/"* ~/.claude/agents/
-cp -r "$BACKUP_DIR/commands/"* ~/.claude/commands/ 2>/dev/null
-cp "$BACKUP_DIR/settings/CLAUDE.md" ~/.claude/
-cp "$BACKUP_DIR/settings/settings.json" ~/.claude/ 2>/dev/null
-cp "$BACKUP_DIR/settings/settings.local.json" ~/.claude/ 2>/dev/null
-cp "$BACKUP_DIR/plugins/"* ~/.claude/plugins/ 2>/dev/null
-cp "$BACKUP_DIR/mcp/claude-code-mcp.json" ~/.config/claude-code/mcp.json 2>/dev/null
-cp "$BACKUP_DIR/mcp/claude_desktop_config.json" ~/.config/claude-desktop/ 2>/dev/null
-cp "$BACKUP_DIR/mcp/vscode-mcp.json" ~/.config/Code/User/mcp.json 2>/dev/null
-
-echo "Claude Code configuration restored!"
-echo "Next steps:"
-echo "  1. Run 'claude login' to authenticate"
-echo "  2. Update paths in MCP configs if needed"
-echo "  3. Run 'claude plugins install' to restore plugins"
-```
-
-## Backup Date
-Created: $(date +%Y-%m-%d)
+- API keys / credentials — re-authenticate with `claude login`
+- Plugin cache — re-downloaded automatically
+- Session data, debug logs, telemetry, history

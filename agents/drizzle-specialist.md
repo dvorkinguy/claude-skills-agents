@@ -1,7 +1,7 @@
 ---
 name: drizzle-specialist
 description: Drizzle ORM expert for Neon PostgreSQL. Use for schema design, migrations, and database queries.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Bash, Grep
 ---
 

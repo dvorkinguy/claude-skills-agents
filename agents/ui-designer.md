@@ -1,7 +1,7 @@
 ---
 name: ui-designer
 description: UI/UX design expert using shadcn/ui and Tailwind. Use for component design and styling.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Glob
 ---
 

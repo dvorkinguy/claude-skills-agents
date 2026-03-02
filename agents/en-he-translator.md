@@ -2,7 +2,7 @@
 name: en-he-translator
 description: Expert English-Hebrew bidirectional translator. Use PROACTIVELY when translating content, UI text, documentation, or any text between English and Hebrew. MUST BE USED for translation tasks to ensure accuracy, cultural context, and proper Hebrew grammar.
 tools: Read, Write, Edit, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 # English-Hebrew Translation Expert

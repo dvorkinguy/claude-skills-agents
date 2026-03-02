@@ -1,7 +1,7 @@
 ---
 name: tdd-specialist
 description: Test-Driven Development expert. Use when implementing new features. ALWAYS write tests FIRST.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 

@@ -8,8 +8,7 @@
         "version": "1.0.0",
         "installedAt": "2025-11-05T15:54:48.437Z",
         "lastUpdated": "2025-11-05T15:54:48.437Z",
-        "gitCommitSha": "c130b4eabd43872040974a9d3bc669bf9a6c9d4b",
-        "isLocal": true
+        "gitCommitSha": "c130b4eabd43872040974a9d3bc669bf9a6c9d4b"
       }
     ],
     "frontend-design@claude-code-plugins": [
@@ -19,8 +18,7 @@
         "version": "1.0.0",
         "installedAt": "2025-12-03T09:14:24.565Z",
         "lastUpdated": "2025-12-03T09:14:24.565Z",
-        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed",
-        "isLocal": true
+        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed"
       }
     ],
     "customer-sales-automation@claude-code-workflows": [
@@ -30,8 +28,7 @@
         "version": "51c85a89771e",
         "installedAt": "2025-12-03T09:14:24.565Z",
         "lastUpdated": "2025-12-03T09:14:24.565Z",
-        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4",
-        "isLocal": true
+        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4"
       }
     ],
     "code-documentation@claude-code-workflows": [
@@ -41,8 +38,7 @@
         "version": "51c85a89771e",
         "installedAt": "2025-12-03T09:14:24.565Z",
         "lastUpdated": "2025-12-03T09:14:24.565Z",
-        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4",
-        "isLocal": true
+        "gitCommitSha": "51c85a89771ef6ae2d7e8996c66c953f741caff4"
       }
     ],
     "code-review@claude-code-plugins": [
@@ -52,8 +48,7 @@
         "version": "1.0.0",
         "installedAt": "2025-12-03T09:14:24.565Z",
         "lastUpdated": "2025-12-03T09:14:24.565Z",
-        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed",
-        "isLocal": true
+        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed"
       }
     ],
     "ralph-wiggum@claude-code-plugins": [
@@ -63,8 +58,7 @@
         "version": "1.0.0",
         "installedAt": "2025-12-03T09:14:24.565Z",
         "lastUpdated": "2025-12-03T09:14:24.565Z",
-        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed",
-        "isLocal": true
+        "gitCommitSha": "84d7b085394b687e1531784350a858918fa6f8ed"
       }
     ],
     "document-skills@anthropic-agent-skills": [
@@ -74,8 +68,127 @@
         "version": "00756142ab04",
         "installedAt": "2025-12-08T19:38:29.779Z",
         "lastUpdated": "2025-12-08T19:38:29.779Z",
-        "gitCommitSha": "00756142ab04c82a447693cf373c4e0c554d1005",
-        "isLocal": true
+        "gitCommitSha": "00756142ab04c82a447693cf373c4e0c554d1005"
+      }
+    ],
+    "productivity@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/productivity/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T19:59:50.760Z",
+        "lastUpdated": "2026-02-08T19:59:50.760Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "sales@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/sales/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T19:59:59.278Z",
+        "lastUpdated": "2026-02-08T19:59:59.278Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "customer-support@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/customer-support/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:00:08.121Z",
+        "lastUpdated": "2026-02-08T20:00:08.121Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "product-management@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/product-management/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:00:16.269Z",
+        "lastUpdated": "2026-02-08T20:00:16.269Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "marketing@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/marketing/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:00:27.493Z",
+        "lastUpdated": "2026-02-08T20:00:27.493Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "legal@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/legal/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:00:38.606Z",
+        "lastUpdated": "2026-02-08T20:00:38.606Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "finance@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/finance/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:00:46.007Z",
+        "lastUpdated": "2026-02-08T20:00:46.007Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "data@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/data/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:00:53.632Z",
+        "lastUpdated": "2026-02-08T20:00:53.632Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "enterprise-search@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/enterprise-search/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:01:00.529Z",
+        "lastUpdated": "2026-02-08T20:01:00.529Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "bio-research@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/bio-research/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-08T20:01:11.410Z",
+        "lastUpdated": "2026-02-08T20:01:11.410Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "cowork-plugin-management@knowledge-work-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/knowledge-work-plugins/cowork-plugin-management/0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2026-02-08T20:01:19.463Z",
+        "lastUpdated": "2026-02-08T20:01:19.463Z",
+        "gitCommitSha": "2592abaf8ee4b5931da6e5475060eed94fea8db8"
+      }
+    ],
+    "claude-stt@jarrodwatts-claude-stt": [
+      {
+        "scope": "user",
+        "installPath": "/home/gi/.claude/plugins/cache/jarrodwatts-claude-stt/claude-stt/0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2026-02-24T10:02:41.646Z",
+        "lastUpdated": "2026-02-24T10:02:41.646Z",
+        "gitCommitSha": "b7b6d9562ab14dfb170580e168bbcda6a8fb1e3f"
       }
     ]
   }

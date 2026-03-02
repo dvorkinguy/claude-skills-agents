@@ -1,7 +1,7 @@
 ---
 name: performance-auditor
 description: Performance optimization expert. Use for Core Web Vitals, bundle size, and load time optimization.
-model: sonnet
+model: opus
 tools: Read, Bash, Grep, Glob
 ---
 

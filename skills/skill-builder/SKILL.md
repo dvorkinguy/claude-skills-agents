@@ -1,160 +1,286 @@
 ---
 name: skill-builder
-description: Guide for creating effective Claude Code skills. Use when users want to create a new skill, update an existing skill, package a skill for distribution, or need guidance on skill structure and best practices. Triggers include "create skill", "build skill", "new skill", "make skill", "skill template", "package skill", or working with SKILL.md files.
+description: Use when creating new skills, optimizing existing skills, or auditing skill quality. Guides skill development following Claude Code official best practices.
 ---
 
-# Skill Builder
+## What This Skill Does
 
-Create Claude Code skills that extend capabilities with specialized knowledge, workflows, and tools.
+Guides the creation and optimization of Claude Code skills using official best practices. Use this whenever:
 
-## Quick Commands
+- Building a new skill from scratch
+- Optimizing or auditing an existing skill
+- Deciding on advanced features (subagent execution, hooks, dynamic context, etc.)
+- Troubleshooting a skill that isn't working correctly
 
-| Task | Command |
-|------|---------|
-| New skill | `python scripts/init_skill.py <name> --path <dir>` |
-| Validate | `python scripts/quick_validate.py <skill-dir>` |
-| Package | `python scripts/package_skill.py <skill-dir> [output-dir]` |
+For the complete technical reference on all frontmatter fields, advanced patterns, and troubleshooting, see [reference.md](references/reference.md).
+For practical tips on optimization, testing, and common pitfalls, see [practical-tips.md](references/practical-tips.md).
 
-## Core Principles
+## Quick Start: What Is a Skill?
 
-1. **Concise is key** - Claude is smart; only add what it doesn't know
-2. **Progressive disclosure** - Metadata always loaded, SKILL.md on trigger, references on-demand
-3. **Appropriate freedom** - High for flexible tasks, low for fragile operations
+A skill is a reusable set of instructions that tells Claude Code how to handle a specific task. Skills live in `.claude/skills/[skill-name]/SKILL.md` inside your project. When you type `/skill-name` or describe what you need in natural language, Claude loads the skill's instructions and follows them.
 
-## Skill Creation Process
+Think of skills as SOPs for Claude. Instead of re-explaining a workflow every conversation, you write it once and invoke it forever.
 
-### Step 1: Clarify Requirements
+**How they work under the hood:**
+- Your project's `CLAUDE.md` instructions are always loaded, every conversation
+- Skill *descriptions* (from frontmatter) are always loaded so Claude knows what's available
+- The full skill content only loads when the skill is actually invoked
+- Once loaded, Claude follows the skill's instructions while still respecting your CLAUDE.md rules
 
-Ask the user:
-- What task should the skill automate?
-- What triggers should invoke it? (keywords, file types, scenarios)
-- What outputs are expected?
-- Can you show example use cases?
+---
 
-### Step 2: Plan Resources
+## Mode 1: Build a New Skill
 
-Analyze each use case to identify:
-- **scripts/** - Repetitive code that should be deterministic
-- **references/** - Documentation too long for SKILL.md
-- **assets/** - Templates, images, boilerplate for output
+When building a new skill, run the **Discovery Interview** first. Do NOT start writing files until discovery is complete.
 
-### Step 3: Initialize
+### Discovery Interview
 
-```bash
-python scripts/init_skill.py my-skill --path ~/.claude/skills
+Ask questions using AskUserQuestion, one round at a time. Each round covers one topic. Move to the next round only after the user answers. Keep going until you're 95% confident you understand the skill well enough to build it without further clarification.
+
+**Round 1: Goal & Name**
+*Why this matters: A clear goal prevents scope creep. The name becomes the `/slash-command`, so it needs to be memorable and specific.*
+
+- What does this skill do? What problem does it solve or what workflow does it automate?
+- What should we call it? (Suggest a name based on their answer -- lowercase, hyphens, max 64 chars)
+
+**Round 2: Trigger**
+*Why this matters: The `description` field is how Claude decides whether to load your skill. Bad trigger words mean Claude never uses it. Too broad means Claude fires it when you don't want it.*
+
+- What would someone say to trigger this? (Get 2-3 natural language phrases)
+- Should it be user-only (`/slash-command`), Claude-auto-invocable, or both?
+- Does it accept arguments? If so, what? (e.g., a topic, a URL, a file path)
+
+**Round 3: Step-by-Step Process**
+*Why this matters: Claude follows instructions literally. Vague steps produce vague results. Specific steps produce consistent output every time.*
+
+- Walk me through exactly what should happen from trigger to output. What's step 1? Step 2? Keep going.
+- For each step: Does Claude do it directly, or delegate to a subagent/script?
+- Does this need to be conversational (back-and-forth with the user) or is it a fire-and-forget task?
+
+**Round 4: Inputs, Outputs & Dependencies**
+*Why this matters: Skills that don't specify where to find inputs or where to put outputs produce inconsistent results. Nailing this down makes the skill reliable.*
+
+- What inputs does the skill need? (Files, API responses, user arguments, live data)
+- What does it produce? (Files, text output, structured data) Where do outputs go?
+- Does it need external APIs, scripts, or tools? Which ones?
+- Does it need reference files, style guides, templates, or examples?
+
+**Round 5: Guardrails & Edge Cases**
+*Why this matters: Skills without guardrails can produce unexpected behavior -- wrong outputs, unnecessary API costs, or actions you didn't intend.*
+
+- What could go wrong? What are the common failure modes?
+- What should this skill NOT do? Any hard boundaries?
+- Are there cost concerns? (API calls, AI image generation, etc.)
+- Any ordering or dependency constraints? (e.g., "must check X before doing Y")
+
+**Round 6: Confirmation**
+*Why this matters: Misunderstandings caught here save you from rebuilding the skill later.*
+
+After all rounds, summarize your understanding back to the user in this format:
+
+```
+## Skill Summary: [name]
+
+**Goal:** [one sentence]
+**Trigger:** `/name` + [natural language phrases]
+**Arguments:** [what it accepts, or "none"]
+
+**Process:**
+1. [step]
+2. [step]
+...
+
+**Inputs:** [what it reads/needs]
+**Outputs:** [what it produces + where]
+**Dependencies:** [APIs, scripts, agents, reference files]
+**Guardrails:** [what can go wrong, what to avoid]
 ```
 
-### Step 4: Edit SKILL.md
+Ask: "Does this capture it? Anything to add or change?" Only proceed to building once the user confirms.
 
-#### Frontmatter (Critical)
+**Skipping rounds:** If the user provides enough context upfront (e.g., they describe the full workflow in their first message), skip rounds that are already answered. Don't re-ask what you already know.
+
+### Build Phase
+
+Once discovery is complete, build the skill following these steps:
+
+**Step 1: Choose the skill type**
+
+- **Task skills** (most common) give step-by-step instructions for a specific action. Invoked with `/name` or natural language. Examples: generate a report, summarize a PR, deploy code.
+- **Reference skills** add knowledge Claude applies to current work without performing an action. Examples: coding conventions, API patterns, style guides.
+
+**Step 2: Configure frontmatter**
+
+Set these fields based on what you learned in discovery:
+
+- `name` -- Matches the directory name. Lowercase, hyphens, max 64 chars.
+- `description` -- Written as: "Use when someone asks to [action], [action], or [action]." Include natural keywords from the trigger phrases.
+- `disable-model-invocation: true` -- Set if the skill has side effects (file generation, API calls, costs money). Prevents Claude from auto-invoking.
+- `argument-hint` -- Set if the skill accepts arguments. Shows in the `/` menu autocomplete.
+- `context: fork` + `agent` -- Set if the skill is self-contained and doesn't need conversation history.
+- `model` -- Set if a specific model capability is needed.
+- `allowed-tools` -- Set if the skill should have restricted tool access.
+
+Only set fields you actually need. Don't add frontmatter just because you can.
+
+For the full field reference and invocation control matrix, see [reference.md](references/reference.md).
+
+**Step 3: Write the skill content**
+
+Structure task skills as:
+1. **Context** -- Files to read, APIs to call, reference material to load
+2. **Step-by-step workflow** -- Numbered steps. Each step tells Claude exactly what to do.
+3. **Output format** -- What the result looks like. Include templates, file paths, structured formats.
+4. **Notes** -- Edge cases, constraints, what to delegate, what NOT to do.
+
+Content rules:
+- Keep SKILL.md under 500 lines. Move detailed reference material to supporting files.
+- Use `$ARGUMENTS` / `$N` for dynamic input from arguments.
+- Use `!`command`` for dynamic context injection (preprocessing).
+- Be specific about agent delegation -- include exact prompt text.
+- Specify all file paths (inputs, outputs, scripts, references).
+
+**Step 4: Add supporting files (if needed)**
+
+If your skill needs detailed reference docs, examples, or scripts, add them alongside SKILL.md in the same directory. Reference them from SKILL.md so Claude knows they exist. Supporting files are NOT loaded automatically -- they load only when Claude needs them. See [reference.md](references/reference.md) for the full pattern.
+
+**Step 5: Document in CLAUDE.md**
+
+Your project's `CLAUDE.md` file is where Claude loads project-wide instructions every conversation. After creating a skill, add a brief entry so you (and your team) know what's available:
+
+- Skill name and `/slash-command`
+- Trigger phrases
+- Brief description of what it does
+- Output location (if it produces files)
+
+This isn't required for the skill to work, but it keeps your project organized and helps Claude understand how skills fit into your broader workflow.
+
+**Step 6: Test**
+
+Test both invocation methods:
+
+1. **Natural language** -- Say something matching the description. Does Claude load the skill?
+   - If not, revise the `description` field to include the keywords you used
+   - Try 2-3 different phrasings to verify it triggers reliably
+2. **Direct invocation** -- Run `/skill-name` with test arguments
+   - Verify `$ARGUMENTS` / `$N` are substituting correctly
+   - Check that outputs go where expected
+3. **Edge cases** -- Try invoking with missing arguments, unusual input, or empty input
+4. **Character budget** -- If you have many skills, run `/context` to confirm your skill's description is being loaded. If it's not, your total descriptions may exceed the budget (see [reference.md](references/reference.md) for details).
+
+If issues arise, see Troubleshooting in [reference.md](references/reference.md).
+
+### Complete Example
+
+Here's a minimal but complete skill you can use as a starting template:
+
+**File:** `.claude/skills/meeting-notes/SKILL.md`
 
 ```yaml
 ---
-name: my-skill
-description: What this skill does and WHEN to use it. Include triggers, file types, scenarios. This is the primary trigger mechanism. Max 1024 chars.
+name: meeting-notes
+description: Use when someone asks to summarize meeting notes, recap a meeting, or format meeting minutes.
+argument-hint: [topic or date]
 ---
+
+## What This Skill Does
+
+Takes raw meeting notes and produces a structured summary with action items.
+
+## Steps
+
+1. Ask the user to paste their raw meeting notes (or provide a file path).
+2. Extract the following from the notes:
+   - **Attendees** -- Who was in the meeting
+   - **Key decisions** -- What was decided
+   - **Action items** -- Who owes what, with deadlines if mentioned
+   - **Open questions** -- Anything unresolved
+3. Format the output using the template below.
+4. If $ARGUMENTS is provided, use it as the meeting title. Otherwise, infer a title from the content.
+
+## Output Template
+
+# Meeting: [title]
+**Date:** [date if mentioned, otherwise "Not specified"]
+**Attendees:** [comma-separated list]
+
+## Key Decisions
+- [decision]
+
+## Action Items
+- [ ] [person]: [task] (due: [date or "TBD"])
+
+## Open Questions
+- [question]
+
+## Notes
+
+- Keep summaries concise. Don't add commentary or embellish.
+- If notes are too vague to extract action items, flag that to the user instead of making them up.
 ```
 
-**Description rules:**
-- Include BOTH what the skill does AND when to use it
-- List specific triggers (file types, keywords, scenarios)
-- No `<` or `>` characters
-- Max 1024 characters
+---
 
-#### Body Patterns
+## Mode 2: Audit an Existing Skill
 
-**Pattern 1: Workflow-Based** (sequential processes)
-```markdown
-## Workflow
-1. Analyze input -> Run `scripts/analyze.py`
-2. Transform -> Apply rules
-3. Output -> Save result
-```
+Use this checklist to audit any existing skill. Read the skill file first before running through the checklist. Fix issues before marking the audit complete.
 
-**Pattern 2: Task-Based** (tool collections)
-```markdown
-## Tasks
-### Create New
-[instructions]
-### Edit Existing
-[instructions]
-```
+### Frontmatter Audit
 
-**Pattern 3: Reference-Based** (standards/guidelines)
-```markdown
-## Guidelines
-### Colors
-### Typography
-```
+- [ ] `name` matches the directory name
+- [ ] `description` uses natural keywords someone would actually say when they need this skill
+- [ ] `description` is specific enough to avoid false triggers but broad enough to catch real requests
+- [ ] `disable-model-invocation: true` is set if the skill has side effects (generates files, calls APIs, sends messages, costs money)
+- [ ] `argument-hint` is set if the skill accepts arguments via `/name`
+- [ ] `allowed-tools` is set if the skill should NOT have access to all tools
+- [ ] `context: fork` is used if the skill is self-contained and produces verbose output
+- [ ] `model` is set only if a specific model capability is needed
+- [ ] No unnecessary fields are set (don't add frontmatter just because you can)
 
-### Step 5: Add Resources
+### Content Audit
 
-#### Scripts (`scripts/`)
-For deterministic, repetitive operations.
-- Test scripts before packaging
-- Make executable: `chmod +x script.py`
+- [ ] Total SKILL.md is under 500 lines (detailed reference moved to supporting files)
+- [ ] Clear step-by-step workflow with numbered steps (for task skills)
+- [ ] Output format is specified with templates or examples
+- [ ] All file paths and locations are documented
+- [ ] Agent delegation instructions include the actual prompt text to send
+- [ ] Notes section covers edge cases, constraints, and what NOT to do
+- [ ] No vague instructions -- every step tells Claude exactly what to do
+- [ ] String substitutions (`$ARGUMENTS`, `$N`) are used where the skill takes input
 
-#### References (`references/`)
-Documentation loaded on-demand.
-- For content >100 lines, add table of contents
-- Split by domain/variant when >500 lines
-- Avoid duplication with SKILL.md
+### Integration Audit
 
-#### Assets (`assets/`)
-Files used in output (not loaded into context).
-- Templates, images, fonts
-- Boilerplate code
+- [ ] Skill is documented in CLAUDE.md (recommended, not required)
+- [ ] Supporting files (if any) are referenced from SKILL.md, not orphaned
+- [ ] Scripts (if any) have correct file paths and are executable
+- [ ] API keys (if any) are stored in environment variables, never hardcoded
 
-### Step 6: Validate & Package
+### Quality Audit
 
-```bash
-python scripts/quick_validate.py my-skill/
-python scripts/package_skill.py my-skill/ ./dist
-```
+- [ ] A beginner could follow the instructions without prior context
+- [ ] Instructions are actionable, not abstract
+- [ ] Delegates to subagents when appropriate to keep main context clean
+- [ ] Doesn't duplicate information that lives elsewhere (CLAUDE.md, other skills)
+- [ ] Output paths follow a predictable convention
 
-## Frontmatter Rules
+### Optimization Opportunities
 
-| Field | Required | Limit | Notes |
-|-------|----------|-------|-------|
-| name | Yes | 64 chars | hyphen-case only (`a-z`, `0-9`, `-`) |
-| description | Yes | 1024 chars | No `<` or `>` characters |
-| allowed-tools | No | - | Restrict tool access |
+After running the audit, check [reference.md](references/reference.md) for advanced features that could improve the skill: `context: fork`, `allowed-tools`, dynamic context injection, hooks, and supporting files.
 
-## Progressive Disclosure Patterns
+---
 
-**Keep SKILL.md under 500 lines.** Split to references/ when needed.
+## Recommended Conventions
 
-**High-level guide with references:**
-```markdown
-## Quick Start
-[Essential workflow]
+Adapt these to fit your project:
 
-## Advanced
-- **Forms**: See `references/forms.md`
-- **API**: See `references/api.md`
-```
+- Skills live in `.claude/skills/[skill-name]/SKILL.md`
+- Output files go in a predictable location (e.g., `output/[skill-name]/`)
+- API keys go in environment variables, never hardcoded in skill files
+- Document all active skills in your project's CLAUDE.md
+- Frontmatter `description` is written as: "Use when someone asks to [action], [action], or [action]."
 
-**Domain-specific organization:**
-```
-skill/
-├── SKILL.md (overview + navigation)
-└── references/
-    ├── aws.md
-    ├── gcp.md
-    └── azure.md
-```
+## Important Notes
 
-## What NOT to Include
-
-- README.md (redundant with SKILL.md)
-- CHANGELOG.md
-- INSTALLATION_GUIDE.md
-- User-facing documentation
-
-Skills are for AI agents, not humans.
-
-## References
-
-- `references/skill-creation-guide.md` - Complete skill creation guide
-- `references/output-patterns.md` - Template and example patterns
-- `references/workflows.md` - Sequential and conditional workflow patterns
+- Always read an existing skill before optimizing it. Never propose changes to a skill you haven't read.
+- When building a new skill, check if a similar skill already exists that could be extended instead.
+- For advanced patterns (subagent execution, hooks, permissions), see [reference.md](references/reference.md).

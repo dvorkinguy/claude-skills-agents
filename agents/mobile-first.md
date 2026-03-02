@@ -1,7 +1,7 @@
 ---
 name: mobile-first
 description: Responsive design expert. Use for mobile-first CSS, touch targets, and viewport handling.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Grep
 ---
 

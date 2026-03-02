@@ -1,7 +1,7 @@
 ---
 name: api-documentation
 description: API documentation expert. Use for OpenAPI specs, SDK generation, and developer documentation.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Bash, Grep
 ---
 

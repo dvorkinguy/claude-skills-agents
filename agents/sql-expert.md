@@ -1,7 +1,7 @@
 ---
 name: sql-expert
 description: PostgreSQL/SQL expert. Use for complex queries, performance optimization, and database design.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Bash
 ---
 

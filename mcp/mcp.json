@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "apify": {
+      "type": "http",
+      "url": "https://mcp.apify.com"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    },
+    "n8n": {
+      "command": "npx",
+      "args": ["-y", "n8n-mcp"],
+      "env": {
+        "N8N_API_KEY": "${N8N_API_KEY}",
+        "N8N_BASE_URL": "https://n8n.guydvorkin.com"
+      }
+    },
+    "attio": {
+      "command": "npx",
+      "args": ["-y", "attio-mcp"],
+      "env": {
+        "ATTIO_API_KEY": "${ATTIO_API_KEY}"
+      }
+    },
+    "hugeicons": {
+      "command": "npx",
+      "args": ["-y", "@hugeicons/mcp-server"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "clerk": {
+      "command": "npx",
+      "args": ["-y", "@clerk/clerk-mcp@latest"],
+      "env": {
+        "CLERK_API_KEY": "${CLERK_API_KEY}",
+        "ALL_TOOLS": "true"
+      }
+    },
+    "ssh-oracle": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "ssh-mcp",
+        "--",
+        "--host=129.159.149.15",
+        "--port=22",
+        "--user=ubuntu",
+        "--key=/home/gi/.ssh/oracle-coolify",
+        "--timeout=60000"
+      ]
+    }
+  }
+}

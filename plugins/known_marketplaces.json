@@ -5,7 +5,7 @@
       "repo": "wshobson/agents"
     },
     "installLocation": "/home/gi/.claude/plugins/marketplaces/claude-code-workflows",
-    "lastUpdated": "2025-12-16T08:38:42.047Z"
+    "lastUpdated": "2025-12-16T21:53:43.318Z"
   },
   "claude-code-plugins": {
     "source": {
@@ -13,7 +13,7 @@
       "repo": "anthropics/claude-code"
     },
     "installLocation": "/home/gi/.claude/plugins/marketplaces/claude-code-plugins",
-    "lastUpdated": "2025-12-16T08:01:32.238Z"
+    "lastUpdated": "2026-03-02T14:00:53.280Z"
   },
   "anthropic-agent-skills": {
     "source": {
@@ -21,7 +21,7 @@
       "repo": "anthropics/skills"
     },
     "installLocation": "/home/gi/.claude/plugins/marketplaces/anthropic-agent-skills",
-    "lastUpdated": "2025-12-16T14:21:55.231Z"
+    "lastUpdated": "2025-12-16T19:42:00.665Z"
   },
   "claude-plugins-official": {
     "source": {
@@ -29,6 +29,22 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/home/gi/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2025-12-16T17:24:52.592Z"
+    "lastUpdated": "2026-03-02T13:55:58.569Z"
+  },
+  "knowledge-work-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/knowledge-work-plugins"
+    },
+    "installLocation": "/home/gi/.claude/plugins/marketplaces/knowledge-work-plugins",
+    "lastUpdated": "2026-02-08T19:59:37.144Z"
+  },
+  "jarrodwatts-claude-stt": {
+    "source": {
+      "source": "github",
+      "repo": "jarrodwatts/claude-stt"
+    },
+    "installLocation": "/home/gi/.claude/plugins/marketplaces/jarrodwatts-claude-stt",
+    "lastUpdated": "2026-02-24T10:02:29.807Z"
   }
 }

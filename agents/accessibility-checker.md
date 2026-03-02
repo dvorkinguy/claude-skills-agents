@@ -1,7 +1,7 @@
 ---
 name: accessibility-checker
 description: WCAG accessibility expert. Use PROACTIVELY when building UI components, forms, or reviewing accessibility.
-model: haiku
+model: opus
 tools: Read, Grep, Glob
 ---
 

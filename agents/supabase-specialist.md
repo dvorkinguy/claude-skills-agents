@@ -1,7 +1,7 @@
 ---
 name: supabase-specialist
 description: Supabase expert for Auth, Storage, RLS policies, and Realtime. Use for auth flows and data security.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Bash
 ---
 

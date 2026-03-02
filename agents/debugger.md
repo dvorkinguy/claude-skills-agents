@@ -1,7 +1,7 @@
 ---
 name: debugger
 description: Debugging expert. Use when encountering errors, unexpected behavior, or need to diagnose issues.
-model: sonnet
+model: opus
 tools: Read, Bash, Grep, Glob
 ---
 
