@@ -62,5 +62,19 @@
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "effortLevel": "low"
+  "effortLevel": "low",
+  "hooks": {
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/backup-to-github.sh",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
 }

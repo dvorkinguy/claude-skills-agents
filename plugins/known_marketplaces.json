@@ -13,7 +13,7 @@
       "repo": "anthropics/claude-code"
     },
     "installLocation": "/home/gi/.claude/plugins/marketplaces/claude-code-plugins",
-    "lastUpdated": "2026-03-02T14:00:53.280Z"
+    "lastUpdated": "2026-03-02T17:20:54.963Z"
   },
   "anthropic-agent-skills": {
     "source": {
@@ -29,7 +29,7 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/home/gi/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-03-02T13:55:58.569Z"
+    "lastUpdated": "2026-03-02T17:23:07.432Z"
   },
   "knowledge-work-plugins": {
     "source": {
