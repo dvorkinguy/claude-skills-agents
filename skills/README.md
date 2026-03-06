@@ -129,12 +129,13 @@
 | `existing-solutions-finder` | Find existing, prior art |
 | `project-router` | Route task, which project |
 
-## Meta (2)
+## Meta (3)
 
 | Skill | Trigger Keywords |
 |-------|-----------------|
 | `plan-interview` | Interview about plan, clarify requirements |
 | `scrape-to-crm` | LinkedIn to Attio, scrape pipeline |
+| `skill-manager` | Manage skills, skill audit, inventory, duplicates, gaps |
 
 ## Creative (2)
 
@@ -151,4 +152,4 @@
 
 ---
 
-**Total: 58 global skills | 25 global agents | 11 active plugins**
+**Total: 60 global skills | 25 global agents | 11 active plugins**
