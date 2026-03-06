@@ -1,6 +1,6 @@
 ---
-name: apify-scraper-builder
-description: Build Apify Actors (web scrapers) using Node.js and Crawlee. Use when creating new scrapers, defining input schemas, configuring Dockerfiles, or deploying to Apify. Triggers include apify, actor, scraper, crawlee, web scraping, data extraction.
+name: apify-scraper-templates
+description: Templates and patterns for Apify Actors (web scrapers) using Node.js and Crawlee. Use for input schemas, Dockerfiles, crawler patterns, and deployment configs. Note: for reasoning about scraper architecture, use the apify-scraper-builder agent instead.
 ---
 
 # Apify Scraper Builder
