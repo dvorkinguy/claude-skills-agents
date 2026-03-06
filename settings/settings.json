@@ -87,5 +87,6 @@
     "claude-stt@jarrodwatts-claude-stt": true
   },
   "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "high"
 }
