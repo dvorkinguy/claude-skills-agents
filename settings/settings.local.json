@@ -21,7 +21,8 @@
       "Bash(pcsc_scan:*)",
       "Bash(pkcs11-tool:*)",
       "Bash(opensc-tool:*)",
-      "Bash(claude mcp:*)"
+      "Bash(claude mcp:*)",
+      "Bash(claude plugin:*)"
     ],
     "deny": [],
     "ask": [],
