@@ -36,7 +36,8 @@
     },
     "hugeicons": {
       "command": "npx",
-      "args": ["-y", "@hugeicons/mcp-server"]
+      "args": ["-y", "@hugeicons/mcp-server"],
+      "disabled": true
     },
     "github": {
       "command": "npx",
@@ -51,7 +52,8 @@
       "env": {
         "CLERK_API_KEY": "${CLERK_API_KEY}",
         "ALL_TOOLS": "true"
-      }
+      },
+      "disabled": true
     },
     "ssh-oracle": {
       "command": "npx",
