@@ -19,6 +19,15 @@ Generate 10 ranked video ideas for the **AI Automation for Business** YouTube ch
 | Competitor list | -> `references/competitors.md` |
 | X influencers | -> `references/x-influencers.md` |
 
+## Cost Estimates
+
+| Run Type | Apify Cost | Notes |
+|----------|-----------|-------|
+| Full run (all phases) | ~$0.10-0.15 | 1 YouTube scraper run + Claude API tokens |
+| Quick trends only (Phase 1) | $0.00 | WebSearch only, no Apify |
+| Competitor check only (Phase 2) | ~$0.08 | Apify YouTube scraper only |
+| Budget full run (Tier 1 only) | ~$0.05 | 6 channels instead of 15 |
+
 ---
 
 ## Content Pillars
@@ -50,19 +59,20 @@ Run these `WebSearch` queries in parallel:
 4. `"AI news this week" OR "AI update" site:theverge.com OR site:techcrunch.com` (last 7 days)
 5. `"artificial intelligence" announcement OR launch OR release` (last 7 days)
 
-### Step 1C: X/Twitter Influencer Scan
+### Step 1C: X/Twitter Influencer Scan (WebSearch)
 
-Use `mcp__apify__call-actor` with a Twitter/X scraper actor to fetch the latest 5-10 tweets from each account listed in `references/x-influencers.md`.
+Use `WebSearch` to scan X/Twitter for AI influencer discussions. Run **3 parallel WebSearch calls** using handles from `references/x-influencers.md`:
 
-**Apify actor options (try in order):**
-- `apidojo/tweet-scraper` — scrape by username
-- `quacker/twitter-scraper` — alternative
-- Search Apify Store with `mcp__apify__search-actors` for "twitter scraper" if above unavailable
+1. `site:x.com karpathy OR AndrewYNg OR svpino AI tool [current month year]`
+2. `site:x.com "AI agent" OR "AI tool" trending [current month year]`
+3. `[top influencer name] AI opinion latest [current year]` (pick 3-4 key influencers)
 
-**Extract from tweets:**
+**Extract from results:**
 - Tool/product mentions (look for links, @mentions, product names)
 - Trending topics and recurring themes
 - Hot takes and debates (potential contrarian content)
+
+> **Note:** WebSearch with `site:x.com` is the primary method. Apify Twitter scrapers (e.g., `apidojo/tweet-scraper`) require auth cookies and often return empty results. Only use them if the user has confirmed working auth cookies are configured.
 
 ### Step 1D: Optional — Research Papers (only if AI research is trending)
 
@@ -91,26 +101,39 @@ Compile a ranked list:
 
 ### Step 2A: Fetch Competitor Videos
 
-Use `mcp__apify__call-actor` with `streamers/youtube-scraper` to fetch recent videos from channels listed in `references/competitors.md`.
+Use `mcp__apify__call-actor` with `streamers/youtube-scraper` to fetch recent videos from ALL channels listed in `references/competitors.md` in a **single run**.
 
-**Tiered scraping:**
+**Single consolidated run** with all 15 channel URLs:
 
-| Tier | Videos to fetch | When |
-|------|----------------|------|
-| Tier 1 (core competitors) | 5 most recent | Every run |
-| Tier 2 (adjacent) | 3 most recent | Every run |
-| Tier 3 (inspiration) | 3 most recent | Full runs only |
-
-**Actor input pattern:**
 ```json
 {
-  "searchKeywords": "",
+  "startUrls": [
+    {"url": "https://www.youtube.com/@nateherk"},
+    {"url": "https://www.youtube.com/@NateBJones"},
+    {"url": "https://www.youtube.com/@briancasel"},
+    {"url": "https://www.youtube.com/@simonscrapes"},
+    {"url": "https://www.youtube.com/@BenAI92"},
+    {"url": "https://www.youtube.com/@leonvanzyl"},
+    {"url": "https://www.youtube.com/@dylandavisAI"},
+    {"url": "https://www.youtube.com/@rasmic"},
+    {"url": "https://www.youtube.com/@TaylorAHaren"},
+    {"url": "https://www.youtube.com/@theboringmarketer"},
+    {"url": "https://www.youtube.com/@DanielPriestley"},
+    {"url": "https://www.youtube.com/@peterdiamandis"},
+    {"url": "https://www.youtube.com/@LennysPodcast"},
+    {"url": "https://www.youtube.com/@GregIsenberg"},
+    {"url": "https://www.youtube.com/@DwarkeshPatel"}
+  ],
   "maxResults": 5,
-  "channelUrls": ["https://www.youtube.com/@nateherk"]
+  "sortVideosBy": "NEWEST"
 }
 ```
 
-Retrieve results with `mcp__apify__get-actor-output`.
+Retrieve results with `mcp__apify__get-actor-output`, using the `fields` parameter to retrieve only needed columns: `title,viewCount,date,channelName,url,likes,duration`.
+
+**Post-processing:** Categorize results by tier based on channel name matching the tier lists in `references/competitors.md`.
+
+> **For quick/budget runs:** Scrape Tier 1 only (6 channels, ~$0.05) by using only the first 6 URLs.
 
 ### Step 2B: Build Content Map
 
@@ -171,14 +194,19 @@ For each of the 10 ideas, use the template from `assets/templates/video-brief.md
 7. **Target Keywords** (3-5 for SEO)
 8. **Score Breakdown** (Trend/Gap/Biz/Evergreen = Total)
 
-### Final Output
+### Final Report
+
+Generate the full report content, then use the `pdf` skill to create a styled PDF:
+
+- **Output path:** `tmp/youtube-ideas-[date].pdf`
+- **Layout:**
+  - Title page: "TOP 10 VIDEO IDEAS - [Date] - AI Automation for Business"
+  - Table of contents
+  - Phase 1: Trends table with scores
+  - Phase 2: Competitor content map + saturation analysis + gap analysis
+  - Phase 3: All 10 ranked ideas with full briefs, grouped by category:
 
 ```
-============================================
-  TOP 10 VIDEO IDEAS — [Date]
-  AI Automation for Business
-============================================
-
 QUICK WINS (Film This Week)
 ----------------------------
 #1. [Title] — Score: XX/40
@@ -195,6 +223,8 @@ CONTRARIAN TAKES (High Risk / High Reward)
 #6. ...
 ```
 
+  - Sources section (all URLs referenced)
+
 ---
 
 ## Error Handling
@@ -202,10 +232,11 @@ CONTRARIAN TAKES (High Risk / High Reward)
 | Issue | Fallback |
 |-------|----------|
 | Apify YouTube scraper fails | Use `WebSearch` for "[channel name] youtube recent videos" |
-| Apify Twitter scraper fails | Use `WebSearch` for "site:x.com [handle] AI tool" |
+| WebSearch X/Twitter returns few results | Try broader queries without `site:x.com`, or add more influencer names |
 | Too few trends found | Expand date range to 14 days |
 | Competitor channel unavailable | Skip and note in output |
 | PubMed/bioRxiv timeout | Skip research phase entirely |
+| PDF generation fails | Fall back to markdown at `tmp/youtube-ideas-[date].md` |
 
 ---
 
