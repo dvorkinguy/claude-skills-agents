@@ -428,22 +428,27 @@ class TitlePageFlowable(Flowable):
             canvas.drawString(0, y, line)
             y -= 24
 
-        # Bottom-left: logo + brand name + email + website
+        # Bottom brand strip: separator line, logo, brand name, contact, date
         bottom_y = -MARGINS + 0.5 * inch
         x_offset = 0
 
-        # White logo on title page
-        logo_white = self.brand_config.get("logo_white")
-        if logo_white and _path_exists(logo_white):
+        # Thin separator line
+        canvas.setStrokeColor(TEXT_MUTED)
+        canvas.setLineWidth(0.5)
+        canvas.line(0, bottom_y + 46, content_w, bottom_y + 46)
+
+        # Black logo (visible on terracotta)
+        logo = self.brand_config.get("logo")
+        if logo and _path_exists(logo):
             from reportlab.lib.utils import ImageReader
-            canvas.drawImage(ImageReader(str(logo_white)),
-                             0, bottom_y - 4, width=32, height=32,
+            canvas.drawImage(ImageReader(str(logo)),
+                             0, bottom_y - 2, width=30, height=30,
                              mask='auto', preserveAspectRatio=True)
-            x_offset = 40
+            x_offset = 38
 
         # Brand name
-        canvas.setFont(FONT_SANS, 14)
-        canvas.setFillColor(white)
+        canvas.setFont(FONT_SANS_BOLD, 14)
+        canvas.setFillColor(TEXT_DARK)
         canvas.drawString(x_offset, bottom_y + 16, self.brand_text)
 
         # Email + website below brand name
@@ -455,10 +460,10 @@ class TitlePageFlowable(Flowable):
             canvas.setFillColor(TEXT_DARK)
             canvas.drawString(x_offset, bottom_y, contact_line)
 
-        # Date bottom-right
+        # Date right-aligned, vertically centered in strip
         canvas.setFont(FONT_SANS, 10)
         canvas.setFillColor(TEXT_DARK)
-        canvas.drawRightString(content_w, bottom_y, self.date)
+        canvas.drawRightString(content_w, bottom_y + 8, self.date)
 
         canvas.restoreState()
 

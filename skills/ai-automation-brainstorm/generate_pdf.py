@@ -37,6 +37,7 @@ Expected JSON structure:
 """
 
 import json
+import re
 import sys
 import os
 from pathlib import Path
@@ -53,7 +54,7 @@ from shared.anthropic_pdf_theme import (
     build_anthropic_styles, detect_brand,
     make_title_page, make_divider_page, make_minimal_table,
     make_callout_box, make_pill_badge, make_two_column,
-    CreamBackground, create_doc,
+    CreamBackground,
 )
 
 from reportlab.lib.units import inch
@@ -70,6 +71,121 @@ from reportlab.graphics.widgetbase import TypedPropertyCollection
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus import Image as RLImage
 from collections import Counter
+from reportlab.platypus import SimpleDocTemplate
+
+
+# ── QA Validation ─────────────────────────────────────────────────────
+
+class AuditingDocTemplate(SimpleDocTemplate):
+    """SimpleDocTemplate subclass that records per-page flowable data for QA."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.audit_data = {"pages": []}
+        self._current_page = None
+
+    def beforePage(self):
+        self._current_page = {
+            "page_num": self.page,
+            "flowable_count": 0,
+            "total_content_height": 0,
+            "flowables": [],
+        }
+
+    def afterFlowable(self, flowable):
+        if self._current_page is None:
+            return
+        # Use already-computed height from layout (avoid re-calling wrap)
+        h = getattr(flowable, 'height', 0) or 0
+        record = {
+            "type": type(flowable).__name__,
+            "height": h,
+        }
+        # Capture text preview for Paragraphs
+        if hasattr(flowable, "text"):
+            record["text_preview"] = str(flowable.text)[:80]
+        self._current_page["flowable_count"] += 1
+        self._current_page["total_content_height"] += h
+        self._current_page["flowables"].append(record)
+
+    def afterPage(self):
+        if self._current_page is not None:
+            self.audit_data["pages"].append(self._current_page)
+            self._current_page = None
+
+
+def _count_pdf_pages(pdf_path):
+    """Count actual page objects in a PDF via raw byte regex."""
+    with open(pdf_path, "rb") as f:
+        data = f.read()
+    return len(re.findall(rb'/Type\s*/Page(?!s)', data))
+
+
+def validate_pdf(pdf_path, audit_data, data):
+    """Post-build QA checks. Returns list of (level, message) tuples."""
+    issues = []
+    pages = audit_data.get("pages", [])
+    spec_cards = data.get("spec_cards", [])
+    frame_height = PAGE_H - 2 * MARGINS  # usable content height per page
+
+    # 1. Page count sanity
+    actual_pages = _count_pdf_pages(pdf_path)
+    # Expected: title + TOC + 4 dividers + discovery table + discovery insights
+    #         + feasibility table + feasibility insights + spec cards + sources + closing
+    min_pages = 8 + len(spec_cards) // 4  # conservative lower bound
+    max_pages = 12 + len(spec_cards) * 2   # generous upper bound
+    if actual_pages < min_pages:
+        issues.append(("WARN", f"Page count ({actual_pages}) seems low (expected >= {min_pages})"))
+    elif actual_pages > max_pages:
+        issues.append(("WARN", f"Page count ({actual_pages}) seems high (expected <= {max_pages})"))
+    else:
+        issues.append(("PASS", f"Page count: {actual_pages} pages (within expected range)"))
+
+    # 2. Content overflow check (generous threshold -- ReportLab handles pagination,
+    #    so only flag extreme cases where a single flowable exceeds frame height)
+    overflow_pages = []
+    for p in pages:
+        for f in p.get("flowables", []):
+            if f["height"] > frame_height * 1.05:
+                overflow_pages.append((p["page_num"], f["type"], f["height"]))
+                break
+    if overflow_pages:
+        details = ", ".join(f"p{pn} ({ft})" for pn, ft, _ in overflow_pages)
+        issues.append(("WARN", f"Oversized flowable on: {details}"))
+    else:
+        issues.append(("PASS", "No oversized flowables detected"))
+
+    # 3. Critical pages check
+    if pages:
+        # Title page should have TitlePageFlowable
+        first_types = [f["type"] for f in pages[0].get("flowables", [])]
+        if "TitlePageFlowable" in first_types:
+            issues.append(("PASS", "Title page has TitlePageFlowable"))
+        else:
+            issues.append(("WARN", "Title page missing TitlePageFlowable"))
+
+        # Divider pages (check for DividerPageFlowable presence across all pages)
+        divider_count = sum(
+            1 for p in pages
+            for f in p.get("flowables", [])
+            if f["type"] == "DividerPageFlowable"
+        )
+        expected_dividers = 4  # discovery, feasibility, spec_cards, sources
+        if divider_count >= expected_dividers:
+            issues.append(("PASS", f"Found {divider_count} divider pages (expected {expected_dividers})"))
+        else:
+            issues.append(("WARN", f"Only {divider_count} divider pages (expected {expected_dividers})"))
+
+        # Closing page should have brand content
+        last_page = pages[-1]
+        if last_page["flowable_count"] >= 3:
+            issues.append(("PASS", "Closing page has content"))
+        else:
+            issues.append(("WARN", f"Closing page has only {last_page['flowable_count']} flowables"))
+    else:
+        issues.append(("WARN", "No page data collected -- audit may have failed"))
+
+    return issues
 
 # ── Brand Config ───────────────────────────────────────────────────────
 # Brand info shown on title page and closing page of every report.
@@ -522,7 +638,14 @@ def build_pdf():
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"automation-brainstorm-{date}.pdf"
 
-    doc = create_doc(out_path)
+    doc = AuditingDocTemplate(
+        str(out_path),
+        pagesize=PAGE_SIZE,
+        topMargin=MARGINS,
+        bottomMargin=MARGINS,
+        leftMargin=MARGINS,
+        rightMargin=MARGINS,
+    )
     story = []
 
     avail_w = PAGE_W - 2 * MARGINS
@@ -883,6 +1006,17 @@ def build_pdf():
 
     doc.build(story, onFirstPage=CreamBackground.draw_bg, onLaterPages=CreamBackground.draw_bg)
     print(f"PDF generated: {out_path}")
+
+    # QA validation
+    issues = validate_pdf(out_path, doc.audit_data, data)
+    print("\n--- QA Validation ---")
+    for level, msg in issues:
+        print(f"  [{level}] {msg}")
+    warn_count = sum(1 for lvl, _ in issues if lvl == "WARN")
+    if warn_count:
+        print(f"\n  {warn_count} warning(s) -- review PDF manually")
+    else:
+        print("\n  All checks passed")
 
 
 if __name__ == "__main__":
