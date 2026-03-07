@@ -43,7 +43,7 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
     "clerk": {
@@ -60,7 +60,7 @@
       "args": ["-y", "tsx", "/home/gi/Documents/_projects/openbrain/src/mcp/server.ts"],
       "env": {
         "DATABASE_URL": "postgresql://neondb_owner:npg_mD1l6vebXwgt@ep-dark-term-alhy05xh-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-        "OPENROUTER_API_KEY": "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"
+        "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}"
       }
     },
     "ssh-oracle": {
