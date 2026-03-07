@@ -137,25 +137,25 @@ def build_anthropic_styles():
         ),
         # Body text
         'Body': dict(
-            parent='Normal', fontName=FONT_SANS, fontSize=10, leading=15,
+            parent='Normal', fontName=FONT_SANS, fontSize=11, leading=16,
             textColor=TEXT_BODY, spaceAfter=6,
         ),
         'BodyBold': dict(
-            parent='Normal', fontName=FONT_SANS_BOLD, fontSize=10, leading=15,
+            parent='Normal', fontName=FONT_SANS_BOLD, fontSize=11, leading=16,
             textColor=TEXT_BODY, spaceAfter=6,
         ),
         'BodySmall': dict(
-            parent='Normal', fontName=FONT_SANS, fontSize=9, leading=13,
+            parent='Normal', fontName=FONT_SANS, fontSize=10, leading=14,
             textColor=TEXT_BODY, spaceAfter=4,
         ),
         # Bullet list
         'BulletItem': dict(
-            parent='Normal', fontName=FONT_SANS, fontSize=10, leading=15,
+            parent='Normal', fontName=FONT_SANS, fontSize=11, leading=16,
             textColor=TEXT_BODY, spaceAfter=4, leftIndent=18, bulletIndent=6,
         ),
         # Callout box text
         'Callout': dict(
-            parent='Normal', fontName=FONT_SANS, fontSize=9.5, leading=14,
+            parent='Normal', fontName=FONT_SANS, fontSize=10.5, leading=15,
             textColor=TEXT_BODY, spaceAfter=4,
         ),
         # Muted small text
@@ -165,12 +165,12 @@ def build_anthropic_styles():
         ),
         # Table header
         'TableHeader': dict(
-            parent='Normal', fontName=FONT_SANS_BOLD, fontSize=8.5, leading=12,
+            parent='Normal', fontName=FONT_SANS_BOLD, fontSize=10, leading=14,
             textColor=TEXT_DARK,
         ),
         # Table cell
         'TableCell': dict(
-            parent='Normal', fontName=FONT_SANS, fontSize=8.5, leading=12,
+            parent='Normal', fontName=FONT_SANS, fontSize=10, leading=14,
             textColor=TEXT_BODY,
         ),
         # Brand mark
@@ -325,7 +325,7 @@ class DividerPageFlowable(Flowable):
         canvas.saveState()
         # Full-bleed color background (extend beyond margins)
         canvas.setFillColor(self.color)
-        canvas.rect(-MARGINS, -MARGINS, PAGE_W, PAGE_H, fill=1, stroke=0)
+        canvas.rect(-2*MARGINS, -2*MARGINS, PAGE_W + 2*MARGINS, PAGE_H + 2*MARGINS, fill=1, stroke=0)
         # Title at bottom-left
         canvas.setFont(FONT_SERIF, 40)
         canvas.setFillColor(TEXT_DARK)
@@ -369,7 +369,7 @@ class TitlePageFlowable(Flowable):
         canvas.saveState()
         # Full-bleed background
         canvas.setFillColor(self.color)
-        canvas.rect(-MARGINS, -MARGINS, PAGE_W, PAGE_H, fill=1, stroke=0)
+        canvas.rect(-2*MARGINS, -2*MARGINS, PAGE_W + 2*MARGINS, PAGE_H + 2*MARGINS, fill=1, stroke=0)
         content_w = PAGE_W - 2 * MARGINS
 
         # Title top-left, large serif
@@ -431,7 +431,7 @@ def make_minimal_table(data, col_widths, has_header=True):
     table = Table(data, colWidths=col_widths)
     style_cmds = [
         ('FONTNAME', (0, 0), (-1, -1), FONT_SANS),
-        ('FONTSIZE', (0, 0), (-1, -1), 8.5),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('TEXTCOLOR', (0, 0), (-1, -1), TEXT_BODY),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),

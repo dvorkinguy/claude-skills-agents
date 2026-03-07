@@ -116,17 +116,22 @@ def build_pdf():
 
     avail_w = PAGE_W - 2 * MARGINS
 
-    # ===== TITLE PAGE =====
+    # ===== TITLE + TABLE OF CONTENTS (combined first page) =====
     title_text = "AI Automation Brainstorm"
     subtitle_text = smart_title(domain)
     if problem_area:
         subtitle_text += f" -- {smart_title(problem_area)}"
-    story.extend(make_title_page(title_text, subtitle_text, brand, date))
 
-    # ===== TABLE OF CONTENTS =====
-    story.append(Paragraph("Contents", styles['TOCTitle']))
-    story.append(HRFlowable(width="50%", thickness=0.5, color=HexColor('#CCCCCC'),
-                             spaceAfter=20, hAlign='LEFT'))
+    # Title block with terracotta accent
+    story.append(HRFlowable(width="100%", thickness=3,
+                             color=DIVIDER_COLORS["title"], spaceAfter=14, hAlign='LEFT'))
+    story.append(Paragraph(title_text, styles['DisplayTitle']))
+    story.append(Paragraph(subtitle_text, styles['DisplaySubtitle']))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph(f"{brand}  |  {date}", styles['Muted']))
+    story.append(Spacer(1, 20))
+    story.append(HRFlowable(width="30%", thickness=0.5, color=HexColor('#CCCCCC'),
+                             spaceAfter=14, hAlign='LEFT'))
 
     cat_counts = {}
     for card in spec_cards:
@@ -155,7 +160,7 @@ def build_pdf():
             story.append(Paragraph(f"<b>{section}</b>", s))
 
     # Summary stats as a clean row
-    story.append(Spacer(1, 30))
+    story.append(Spacer(1, 16))
     summary_data = [[
         f"{len(discoveries)} Solutions", f"{len(feasibility)} Evaluated",
         f"{len(spec_cards)} Spec Cards", f"Cost: {cost}"
@@ -173,12 +178,6 @@ def build_pdf():
     ]))
     story.append(summary_table)
     story.append(PageBreak())
-
-    # ===== PHASE 1 DIVIDER =====
-    story.extend(make_divider_page(
-        "Phase 1:\nSolution Discovery",
-        DIVIDER_COLORS["discovery"]
-    ))
 
     # ===== PHASE 1: DISCOVERY CONTENT =====
     story.append(make_pill_badge("Phase 1"))
@@ -214,13 +213,7 @@ def build_pdf():
             disc_data,
             [0.35 * inch, 3.0 * inch, 2.0 * inch, 2.5 * inch, 0.7 * inch]
         ))
-    story.append(PageBreak())
-
-    # ===== PHASE 2 DIVIDER =====
-    story.extend(make_divider_page(
-        "Phase 2:\nFeasibility Matrix",
-        DIVIDER_COLORS["feasibility"]
-    ))
+    story.append(Spacer(1, 16))
 
     # ===== PHASE 2: FEASIBILITY CONTENT =====
     story.append(make_pill_badge("Phase 2"))
@@ -260,25 +253,24 @@ def build_pdf():
         "<b>Blocked</b> = missing critical integration",
         styles['Muted']
     ))
-    story.append(PageBreak())
-
-    # ===== PHASE 3 DIVIDER =====
-    story.extend(make_divider_page(
-        "Phase 3:\nAutomation Spec Cards",
-        DIVIDER_COLORS["spec_cards"]
-    ))
-
     # ===== PHASE 3: SPEC CARDS =====
     current_category = None
+    is_first_card = True
 
     for card in spec_cards:
         cat = card.get("category", "EXPERIMENTAL")
         cat_color = CATEGORY_COLORS.get(cat, CATEGORY_COLORS["EXPERIMENTAL"])
 
-        # Build card elements
-        card_elements = []
+        # Phase 3 section header (before first card only)
+        if is_first_card:
+            story.append(Spacer(1, 16))
+            story.append(make_pill_badge("Phase 3"))
+            story.append(Spacer(1, 8))
+            story.append(Paragraph("Automation Spec Cards", styles['H1Serif']))
+            story.append(Spacer(1, 8))
+            is_first_card = False
 
-        # Category section header (included in first card's KeepTogether)
+        # Category section header
         if cat != current_category:
             current_category = cat
             if cat == "QUICK WIN":
@@ -290,18 +282,18 @@ def build_pdf():
             else:
                 label = "Experimental -- Backlog"
 
-            card_elements.append(make_pill_badge(label, bg_color=cat_color))
-            card_elements.append(Spacer(1, 16))
+            story.append(make_pill_badge(label, bg_color=cat_color))
+            story.append(Spacer(1, 10))
 
         score_text = card.get("score", "")
 
-        # Card title (large serif)
-        card_elements.append(Paragraph(
+        # Card header (title + score) -- keep together so title doesn't orphan
+        card_header = []
+        card_header.append(Paragraph(
             f'#{card.get("num", "")}. {card.get("name", "")}',
             styles['CardTitle']
         ))
 
-        # Score inline
         if score_text:
             scores = card.get("scores", {})
             score_parts = []
@@ -310,8 +302,9 @@ def build_pdf():
                 score_parts.append(f"{key.title()}: {val}/10")
             total = sum(scores.values())
             score_line = "  |  ".join(score_parts) + f"  |  <b>Total: {total}/50</b>"
-            card_elements.append(Paragraph(score_line, styles['BodySmall']))
-            card_elements.append(Spacer(1, 8))
+            card_header.append(Paragraph(score_line, styles['BodySmall']))
+
+        story.append(KeepTogether(card_header))
 
         # Two-column layout: left = details, right = callout (revenue + scores)
         left_items = []
@@ -382,26 +375,20 @@ def build_pdf():
             right_items.append(make_callout_box(callout_items))
             right_items.append(Spacer(1, 8))
 
-        # Build two-column layout
+        # Card body flows naturally (no KeepTogether -- avoids orphaned pages)
         if right_items:
-            card_elements.append(make_two_column(left_items, right_items, left_pct=0.55))
+            story.append(make_two_column(left_items, right_items, left_pct=0.55))
         else:
-            card_elements.extend(left_items)
+            story.extend(left_items)
 
-        card_elements.append(Spacer(1, 6))
         # Thin separator between cards
-        card_elements.append(HRFlowable(
+        story.append(HRFlowable(
             width="100%", thickness=0.5, color=HexColor('#E0D8D0'),
-            spaceAfter=16, spaceBefore=8
+            spaceAfter=12, spaceBefore=6
         ))
 
-        story.append(KeepTogether(card_elements))
-
-    # ===== SOURCES DIVIDER =====
-    story.append(PageBreak())
-    story.extend(make_divider_page("Sources", DIVIDER_COLORS["sources"]))
-
     # ===== SOURCES CONTENT =====
+    story.append(PageBreak())
     story.append(make_pill_badge("References"))
     story.append(Spacer(1, 8))
     story.append(Paragraph("Sources", styles['H1Serif']))
