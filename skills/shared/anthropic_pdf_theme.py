@@ -210,7 +210,7 @@ class CreamBackground(Flowable):
     @staticmethod
     def draw_bg(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(BG_CREAM)
+        canvas.setFillColor(white)
         canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
         # Page number bottom-right
         canvas.setFont(FONT_SANS, 8)
