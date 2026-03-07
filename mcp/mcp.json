@@ -56,8 +56,8 @@
       "disabled": true
     },
     "openbrain": {
-      "command": "npx",
-      "args": ["tsx", "/home/gi/Documents/_projects/openbrain/src/mcp/server.ts"],
+      "command": "/home/gi/.nvm/versions/node/v22.18.0/bin/npx",
+      "args": ["-y", "tsx", "/home/gi/Documents/_projects/openbrain/src/mcp/server.ts"],
       "env": {
         "DATABASE_URL": "postgresql://neondb_owner:npg_mD1l6vebXwgt@ep-dark-term-alhy05xh-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
         "OPENROUTER_API_KEY": "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"
