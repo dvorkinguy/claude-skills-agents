@@ -1,7 +1,7 @@
---- a/claude_stt/sounds.py
-+++ b/claude_stt/sounds.py
+--- a/claude_stt/sounds.py	2026-02-24 12:02:29.725042415 +0200
++++ b/claude_stt/sounds.py	2026-03-07 17:25:29.320819768 +0200
 @@ -22,8 +22,8 @@
-
+ 
  # Linux sound paths (common locations)
  LINUX_SOUNDS = {
 -    "start": "/usr/share/sounds/freedesktop/stereo/device-added.oga",
@@ -14,12 +14,12 @@
 @@ -77,19 +77,24 @@
          _logger.debug("Sound file missing: %s", sound_file)
          return
-
+ 
 -    # Try pw-play first (PipeWire native) when the PipeWire socket is present
 -    if shutil.which("pw-play") and _pipewire_socket_available():
-+    # Volume boost for start sound (paplay volume is in 0-65536 range, 65536=100%)
++    # Volume boost for start/stop sounds (paplay volume: 65536=100%)
 +    volume_arg = []
-+    if event == "start" and shutil.which("paplay"):
++    if event in ("start", "stop") and shutil.which("paplay"):
 +        volume_arg = ["--volume", "90000"]  # ~137% louder
 +
 +    # Try paplay first (supports --volume for louder start)
@@ -31,7 +31,7 @@
              stderr=subprocess.DEVNULL,
          )
          return
-
+ 
 -    # Try paplay (PulseAudio)
 -    if shutil.which("paplay"):
 +    # Try pw-play (PipeWire native) when the PipeWire socket is present

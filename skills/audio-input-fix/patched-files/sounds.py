@@ -77,9 +77,9 @@ def _play_linux_sound(event: SoundEvent) -> None:
         _logger.debug("Sound file missing: %s", sound_file)
         return
 
-    # Volume boost for start sound (paplay volume is in 0-65536 range, 65536=100%)
+    # Volume boost for start/stop sounds (paplay volume: 65536=100%)
     volume_arg = []
-    if event == "start" and shutil.which("paplay"):
+    if event in ("start", "stop") and shutil.which("paplay"):
         volume_arg = ["--volume", "90000"]  # ~137% louder
 
     # Try paplay first (supports --volume for louder start)

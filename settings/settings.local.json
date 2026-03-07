@@ -36,7 +36,8 @@
       "Bash(CACHE_SRC=\"/home/gi/.claude/plugins/cache/jarrodwatts-claude-stt/claude-stt/0.1.0/src\")",
       "Bash(FALLBACK=\"/home/gi/.claude/skills/audio-input-fix/patched-files\")",
       "Read(//home/gi/$CACHE_SRC/claude_stt/**)",
-      "Read(//home/gi/$CACHE_SRC/claude_stt/engines/**)"
+      "Read(//home/gi/$CACHE_SRC/claude_stt/engines/**)",
+      "Bash(paplay:*)"
     ],
     "deny": [],
     "ask": [],
