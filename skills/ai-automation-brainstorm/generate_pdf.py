@@ -73,24 +73,29 @@ from collections import Counter
 
 # ── Brand Config ───────────────────────────────────────────────────────
 # Brand info shown on title page and closing page of every report.
+_PROJECT_ROOT = Path.home() / "Documents" / "_projects" / "DVORKIN-2"
+
 BRAND_CONFIG = {
     "Export Arena": {
         "tagline": "AI Workforce as a Service\nfor Global Trade SMBs",
         "email": "hello@exportarena.com",
         "website": "exportarena.com",
-        "logo": Path.home() / "Documents" / "_projects" / "DVORKIN-2" / "tmp" / "export-arena-icon.png",
+        "logo": _PROJECT_ROOT / "projects" / "export-arena" / "4_1_2.png",        # black (content pages)
+        "logo_white": _PROJECT_ROOT / "projects" / "export-arena" / "4_1.png",    # white (title/divider)
     },
     "Guy Dvorkin": {
         "tagline": "AI Automations & AI Workforce\nfor Businesses",
         "email": "guy@guydvorkin.com",
         "website": "guydvorkin.com",
         "logo": None,
+        "logo_white": None,
     },
     "Afarsemon": {
         "tagline": "AI Workforce as a Service\nfor Israeli Businesses",
         "email": "hello@afarsemon.com",
         "website": "afarsemon.com",
         "logo": None,
+        "logo_white": None,
     },
 }
 
@@ -157,8 +162,8 @@ class HBarChartFlowable(Flowable):
         self.values = values
         self.bar_color = bar_color or DIVIDER_COLORS["discovery"]
         self._width = width
-        self.bar_h = 22
-        self.gap = 8
+        self.bar_h = 18
+        self.gap = 4
         self._height = height or (len(labels) * (self.bar_h + self.gap) + 40)
         self.value_suffix = value_suffix
         self.title = title
@@ -388,7 +393,7 @@ def make_phase2_summary(feasibility, styles):
     elements = []
 
     elements.append(Paragraph("Feasibility Insights", styles['H1Serif']))
-    elements.append(Spacer(1, 8))
+    elements.append(Spacer(1, 4))
 
     # Count statuses
     status_counts = Counter(f.get("feasibility", "Unknown") for f in feasibility)
@@ -408,7 +413,7 @@ def make_phase2_summary(feasibility, styles):
     ready_count = status_counts.get("Ready", 0)
     high_fit = stack_fit_counts.get("High", 0)
 
-    # Big stats
+    # Big stats (compact)
     stat_colors = [DIVIDER_COLORS["feasibility"], DIVIDER_COLORS["discovery"],
                    DIVIDER_COLORS["title"]]
     stats_data = [
@@ -419,7 +424,7 @@ def make_phase2_summary(feasibility, styles):
 
     stat_flowables = []
     for num, label, color in stats_data:
-        stat_flowables.append(BigStatFlowable(num, label, color=color, width=180, height=80))
+        stat_flowables.append(BigStatFlowable(num, label, color=color, width=180, height=55))
 
     stat_table = Table([stat_flowables], colWidths=[180] * len(stat_flowables))
     stat_table.setStyle(TableStyle([
@@ -429,7 +434,7 @@ def make_phase2_summary(feasibility, styles):
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     elements.append(stat_table)
-    elements.append(Spacer(1, 24))
+    elements.append(Spacer(1, 8))
 
     # Feasibility status donut + Stack fit donut side by side
     status_labels = list(status_counts.keys())
@@ -455,11 +460,11 @@ def make_phase2_summary(feasibility, styles):
 
     donut1 = DonutChartFlowable(
         status_labels, status_values, status_colors,
-        width=280, height=180, title="Build Readiness"
+        width=280, height=110, title="Build Readiness"
     )
     donut2 = DonutChartFlowable(
         fit_labels, fit_values, fit_colors,
-        width=280, height=180, title="Stack Fit"
+        width=280, height=110, title="Stack Fit"
     )
 
     chart_table = Table([[donut1, donut2]],
@@ -470,9 +475,9 @@ def make_phase2_summary(feasibility, styles):
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     elements.append(chart_table)
-    elements.append(Spacer(1, 16))
+    elements.append(Spacer(1, 6))
 
-    # Build hours bar chart
+    # Build hours bar chart (compact: bar_h=14, gap=2)
     # Sort by build hours descending
     sorted_items = sorted(zip(
         [f.get("name", "") for f in feasibility],
@@ -482,12 +487,16 @@ def make_phase2_summary(feasibility, styles):
     bar_labels = [n[:40] + "..." if len(n) > 40 else n for n, _ in sorted_items]
     bar_values = [v for _, v in sorted_items]
 
-    elements.append(HBarChartFlowable(
+    bar = HBarChartFlowable(
         bar_labels, bar_values,
         bar_color=DIVIDER_COLORS["feasibility"],
         width=650, title="Build Effort (hours)",
         value_suffix="h"
-    ))
+    )
+    bar.bar_h = 14
+    bar.gap = 2
+    bar._height = len(bar_labels) * (14 + 2) + 34
+    elements.append(bar)
 
     return elements
 
@@ -524,7 +533,9 @@ def build_pdf():
     if problem_area:
         subtitle_text += f" -- {smart_title(problem_area)}"
 
-    story.extend(make_title_page(title_text, subtitle_text, brand, date))
+    brand_info = BRAND_CONFIG.get(brand, BRAND_CONFIG.get("Guy Dvorkin"))
+    CreamBackground.set_brand_config(brand_info)
+    story.extend(make_title_page(title_text, subtitle_text, brand, date, brand_config=brand_info))
 
     # ===== TABLE OF CONTENTS =====
     story.append(Paragraph("Contents", styles['TOCTitle']))
@@ -808,73 +819,63 @@ def build_pdf():
             story.append(Paragraph(s, styles['BulletItem']))
 
     # ===== BRANDED CLOSING PAGE =====
-    brand_info = BRAND_CONFIG.get(brand, BRAND_CONFIG.get("Guy Dvorkin"))
     story.append(PageBreak())
-    story.append(Spacer(1, 80))
+    story.append(Spacer(1, 120))
 
-    # Logo + brand name row
+    # Centered logo (larger)
     logo_path = brand_info.get("logo")
     if logo_path and Path(logo_path).exists():
-        logo_img = RLImage(str(logo_path), width=48, height=48)
-        brand_name_p = Paragraph(
-            f'<font size="24">{brand}</font>',
-            ParagraphStyle('brand_close_name', parent=styles['Body'],
-                           fontName=FONT_SERIF, fontSize=24, leading=30,
-                           textColor=TEXT_DARK, spaceAfter=0)
-        )
-        logo_table = Table(
-            [[logo_img, brand_name_p]],
-            colWidths=[60, avail_w - 60]
-        )
+        logo_img = RLImage(str(logo_path), width=72, height=72)
+        logo_table = Table([[logo_img]], colWidths=[avail_w])
         logo_table.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('TOPPADDING', (0, 0), (-1, -1), 0),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
         ]))
         story.append(logo_table)
-    else:
-        story.append(Paragraph(
-            brand, ParagraphStyle('brand_close', parent=styles['Body'],
-                                  fontName=FONT_SERIF, fontSize=28, leading=34,
-                                  textColor=TEXT_DARK)
-        ))
+        story.append(Spacer(1, 20))
 
-    story.append(Spacer(1, 12))
+    # Brand name centered
+    story.append(Paragraph(
+        brand,
+        ParagraphStyle('brand_close', parent=styles['Body'],
+                       fontName=FONT_SERIF, fontSize=32, leading=38,
+                       textColor=TEXT_DARK, alignment=TA_CENTER)
+    ))
+    story.append(Spacer(1, 8))
 
-    # Tagline
+    # Tagline centered
     tagline = brand_info.get("tagline", "")
     for line in tagline.split("\n"):
         story.append(Paragraph(
             line,
             ParagraphStyle('tagline', parent=styles['Body'],
                            fontName=FONT_SANS, fontSize=16, leading=22,
-                           textColor=TEXT_BODY, spaceAfter=2)
+                           textColor=TEXT_BODY, spaceAfter=2, alignment=TA_CENTER)
         ))
 
-    story.append(Spacer(1, 24))
-    story.append(HRFlowable(width="40%", thickness=0.5,
-                              color=HexColor('#E0D8D0'), hAlign='LEFT'))
-    story.append(Spacer(1, 16))
+    story.append(Spacer(1, 32))
+    story.append(HRFlowable(width="30%", thickness=0.5,
+                              color=HexColor('#E0D8D0'), hAlign='CENTER'))
+    story.append(Spacer(1, 20))
 
-    # Contact info
+    # Contact info centered
     email = brand_info.get("email", "")
     website = brand_info.get("website", "")
     if email:
         story.append(Paragraph(
             f'<a href="mailto:{email}" color="#3366AA">{email}</a>',
             ParagraphStyle('contact', parent=styles['Body'],
-                           fontSize=12, spaceAfter=4)
+                           fontSize=12, spaceAfter=4, alignment=TA_CENTER)
         ))
     if website:
         story.append(Paragraph(
             f'<a href="https://{website}" color="#3366AA">{website}</a>',
             ParagraphStyle('contact2', parent=styles['Body'],
-                           fontSize=12, spaceAfter=4)
+                           fontSize=12, spaceAfter=4, alignment=TA_CENTER)
         ))
 
-    story.append(Spacer(1, 40))
+    story.append(Spacer(1, 60))
     story.append(Paragraph(
         f"Generated by AI Automation Brainstorm  |  {smart_title(domain)}  |  {date}",
         ParagraphStyle('footer', parent=styles['Muted'], alignment=TA_CENTER)

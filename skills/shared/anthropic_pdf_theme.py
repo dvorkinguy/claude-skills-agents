@@ -57,6 +57,12 @@ CATEGORY_COLORS = {
 
 # ── Brand Detection ─────────────────────────────────────────────────────
 
+def _path_exists(p):
+    """Check if a file path exists (handles str and Path)."""
+    from pathlib import Path as _Path
+    return _Path(str(p)).exists() if p else False
+
+
 BRAND_MAP = {
     "export": "Export Arena",
     "arena": "Export Arena",
@@ -207,16 +213,46 @@ def build_anthropic_styles():
 class CreamBackground(Flowable):
     """Draw cream background on content pages via onPage callback."""
 
+    # Class-level brand config; set before building the doc
+    _brand_config = {}
+
+    @classmethod
+    def set_brand_config(cls, config):
+        cls._brand_config = config or {}
+
     @staticmethod
     def draw_bg(canvas, doc):
         canvas.saveState()
         canvas.setFillColor(white)
         canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
+
+        footer_y = 0.5 * inch
+        config = CreamBackground._brand_config
+        website = config.get("website", "")
+        logo_path = config.get("logo")  # black logo for content pages
+
+        # Brand footer bottom-left: small logo + website link
+        x = MARGINS
+        if logo_path and _path_exists(logo_path):
+            from reportlab.lib.utils import ImageReader
+            canvas.drawImage(ImageReader(str(logo_path)),
+                             x, footer_y - 4, width=16, height=16,
+                             mask='auto', preserveAspectRatio=True)
+            x += 22
+        if website:
+            canvas.setFont(FONT_SANS, 8)
+            canvas.setFillColor(TEXT_MUTED)
+            url = f"https://{website}"
+            canvas.drawString(x, footer_y, website)
+            # Make it a clickable link
+            text_w = canvas.stringWidth(website, FONT_SANS, 8)
+            canvas.linkURL(url, (x, footer_y - 2, x + text_w, footer_y + 10))
+
         # Page number bottom-right
         canvas.setFont(FONT_SANS, 8)
         canvas.setFillColor(TEXT_MUTED)
         page_num = canvas.getPageNumber()
-        canvas.drawRightString(PAGE_W - MARGINS, 0.5 * inch, str(page_num))
+        canvas.drawRightString(PAGE_W - MARGINS, footer_y, str(page_num))
         canvas.restoreState()
 
 
@@ -344,22 +380,23 @@ class DividerPageFlowable(Flowable):
         canvas.restoreState()
 
 
-def make_title_page(title, subtitle, brand_text, date, color=None):
+def make_title_page(title, subtitle, brand_text, date, color=None, brand_config=None):
     """Create elements for the title page (full-bleed terracotta)."""
     color = color or DIVIDER_COLORS["title"]
-    return [TitlePageFlowable(title, subtitle, brand_text, date, color), PageBreak()]
+    return [TitlePageFlowable(title, subtitle, brand_text, date, color, brand_config), PageBreak()]
 
 
 class TitlePageFlowable(Flowable):
     """Full-bleed title page matching Anthropic style."""
 
-    def __init__(self, title, subtitle, brand_text, date, color):
+    def __init__(self, title, subtitle, brand_text, date, color, brand_config=None):
         super().__init__()
         self.title = title
         self.subtitle = subtitle
         self.brand_text = brand_text
         self.date = date
         self.color = color
+        self.brand_config = brand_config or {}
 
     def wrap(self, availWidth, availHeight):
         return availWidth, availHeight
@@ -391,15 +428,37 @@ class TitlePageFlowable(Flowable):
             canvas.drawString(0, y, line)
             y -= 24
 
-        # Brand mark bottom-left
+        # Bottom-left: logo + brand name + email + website
+        bottom_y = -MARGINS + 0.5 * inch
+        x_offset = 0
+
+        # White logo on title page
+        logo_white = self.brand_config.get("logo_white")
+        if logo_white and _path_exists(logo_white):
+            from reportlab.lib.utils import ImageReader
+            canvas.drawImage(ImageReader(str(logo_white)),
+                             0, bottom_y - 4, width=32, height=32,
+                             mask='auto', preserveAspectRatio=True)
+            x_offset = 40
+
+        # Brand name
         canvas.setFont(FONT_SANS, 14)
         canvas.setFillColor(white)
-        canvas.drawString(0, -MARGINS + 0.6 * inch, self.brand_text)
+        canvas.drawString(x_offset, bottom_y + 16, self.brand_text)
 
-        # Date bottom-left, above brand
+        # Email + website below brand name
+        email = self.brand_config.get("email", "")
+        website = self.brand_config.get("website", "")
+        contact_line = "  |  ".join(filter(None, [email, website]))
+        if contact_line:
+            canvas.setFont(FONT_SANS, 9)
+            canvas.setFillColor(TEXT_DARK)
+            canvas.drawString(x_offset, bottom_y, contact_line)
+
+        # Date bottom-right
         canvas.setFont(FONT_SANS, 10)
         canvas.setFillColor(TEXT_DARK)
-        canvas.drawString(0, -MARGINS + 0.6 * inch + 22, self.date)
+        canvas.drawRightString(content_w, bottom_y, self.date)
 
         canvas.restoreState()
 
