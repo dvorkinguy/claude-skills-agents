@@ -275,7 +275,10 @@ def build_pdf():
         cat = card.get("category", "EXPERIMENTAL")
         cat_color = CATEGORY_COLORS.get(cat, CATEGORY_COLORS["EXPERIMENTAL"])
 
-        # Category section header
+        # Build card elements
+        card_elements = []
+
+        # Category section header (included in first card's KeepTogether)
         if cat != current_category:
             current_category = cat
             if cat == "QUICK WIN":
@@ -287,13 +290,9 @@ def build_pdf():
             else:
                 label = "Experimental -- Backlog"
 
-            story.append(make_pill_badge(label, bg_color=cat_color))
-            story.append(Spacer(1, 16))
+            card_elements.append(make_pill_badge(label, bg_color=cat_color))
+            card_elements.append(Spacer(1, 16))
 
-        # Build card elements
-        card_elements = []
-
-        # Pill badge + score on same line
         score_text = card.get("score", "")
 
         # Card title (large serif)
