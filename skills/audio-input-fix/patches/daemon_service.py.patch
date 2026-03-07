@@ -1,0 +1,64 @@
+--- a/claude_stt/daemon_service.py
++++ b/claude_stt/daemon_service.py
+@@ -129,6 +129,20 @@
+             rms = np.sqrt(np.mean(audio**2))
+             db = 20 * np.log10(max(rms, 1e-10))
+             self._logger.info("Transcribing audio (%d samples, %.1f dB)...", len(audio), db)
++
++            # Auto-gain: amplify quiet audio so the STT engine can detect speech
++            gain_mode = self.config.audio_gain
++            if gain_mode < 0:  # auto
++                if db < -20:
++                    max_val = np.abs(audio).max()
++                    if max_val > 1e-10:
++                        gain = 0.9 / max_val
++                        audio = audio * gain
++                        self._logger.info("Auto-amplified %.1fx (original %.1f dB)", gain, db)
++            elif gain_mode > 0:  # fixed multiplier
++                audio = audio * gain_mode
++                self._logger.info("Applied fixed gain %.1fx", gain_mode)
++
+             try:
+                 text = self._engine.transcribe(audio, self.config.sample_rate)
+             except Exception:
+@@ -137,9 +151,9 @@
+
+             text = text.strip()
+             if not text:
++                if db < -40:
++                    self._logger.warning("Mic input very quiet (%.1f dB) — check system mic volume", db)
+                 self._logger.info("No speech detected")
+-                if self.config.sound_effects:
+-                    play_sound("warning")
+                 continue
+
+             display_text = text[:100] + "..." if len(text) > 100 else text
+@@ -167,8 +181,6 @@
+             else:
+                 self._logger.error("Audio recorder failed to start")
+                 self._recording = False
+-                if self.config.sound_effects:
+-                    play_sound("error")
+
+     def _on_recording_stop(self):
+         """Called when recording should stop."""
+@@ -196,8 +208,6 @@
+                 self._transcribe_queue.put_nowait((audio, window_info))
+             except queue.Full:
+                 self._logger.warning("Dropping transcription; queue is full")
+-        elif self.config.sound_effects:
+-            play_sound("warning")
+
+     def _check_max_recording_time(self) -> None:
+         """Check if max recording time has been reached."""
+@@ -207,11 +217,6 @@
+         elapsed = time.time() - self._record_start_time
+         max_seconds = self.config.max_recording_seconds
+
+-        # Warning at 30 seconds before max
+-        if max_seconds > 30 and max_seconds - 30 <= elapsed < max_seconds - 29:
+-            if self.config.sound_effects:
+-                play_sound("warning")
+-
+         if elapsed >= max_seconds:
+             self._on_recording_stop()

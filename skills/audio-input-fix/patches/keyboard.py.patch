@@ -19,7 +19,7 @@
          return True
      except Exception:
          # Fall back to clipboard on any error
-@@ -227,9 +222,6 @@
+@@ -227,13 +222,8 @@
 
          pyperclip.copy(text)
 
@@ -28,4 +28,7 @@
 -
          return True
      except Exception:
-         if config.sound_effects:
+-        if config.sound_effects:
+-            play_sound("error")
+         _logger.warning("Clipboard output failed", exc_info=True)
+         return False

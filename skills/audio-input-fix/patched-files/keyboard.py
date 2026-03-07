@@ -224,8 +224,6 @@ def _output_via_clipboard(text: str, config: Config) -> bool:
 
         return True
     except Exception:
-        if config.sound_effects:
-            play_sound("error")
         _logger.warning("Clipboard output failed", exc_info=True)
         return False
 

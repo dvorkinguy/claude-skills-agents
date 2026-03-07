@@ -38,9 +38,10 @@ log "Cache source: $CACHE_SRC"
 
 # --- Patch definitions: patch_file  target_relative_path  fallback_file ---
 declare -a PATCH_DEFS=(
-    "sounds.py.patch   claude_stt/sounds.py           sounds.py"
-    "keyboard.py.patch claude_stt/keyboard.py         keyboard.py"
-    "whisper.py.patch  claude_stt/engines/whisper.py   whisper.py"
+    "sounds.py.patch          claude_stt/sounds.py            sounds.py"
+    "keyboard.py.patch        claude_stt/keyboard.py          keyboard.py"
+    "whisper.py.patch         claude_stt/engines/whisper.py    whisper.py"
+    "daemon_service.py.patch  claude_stt/daemon_service.py     daemon_service.py"
 )
 
 PATCHED=0

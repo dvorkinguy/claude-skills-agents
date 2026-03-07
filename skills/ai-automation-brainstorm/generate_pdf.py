@@ -228,18 +228,19 @@ def build_pdf():
 
     discoveries = data.get("discoveries", [])
     if discoveries:
+        cell = styles['Body']
         disc_table_data = [["#", "Automation / Solution", "Source", "Target Problem", "Proven?"]]
         for d in discoveries:
             disc_table_data.append([
                 str(d.get("num", "")),
-                d.get("name", ""),
-                d.get("source", ""),
-                d.get("problem", ""),
+                Paragraph(d.get("name", ""), cell),
+                Paragraph(d.get("source", ""), cell),
+                Paragraph(d.get("problem", ""), cell),
                 "Yes" if d.get("proven") else "No",
             ])
         story.append(make_standard_table(
             disc_table_data,
-            [0.3 * inch, 2.2 * inch, 1.2 * inch, 2 * inch, 0.5 * inch]
+            [0.3 * inch, 2.4 * inch, 1.3 * inch, 2.2 * inch, 0.5 * inch]
         ))
     story.append(PageBreak())
 
@@ -249,20 +250,21 @@ def build_pdf():
 
     feasibility = data.get("feasibility", [])
     if feasibility:
+        cell = styles['Body']
         feas_table_data = [["#", "Automation", "Existing Skill?", "n8n Nodes?", "Stack Fit", "Build", "Status"]]
         for f in feasibility:
             feas_table_data.append([
                 str(f.get("num", "")),
-                f.get("name", ""),
-                f.get("existing_skill", "-"),
-                f.get("n8n_nodes", "-"),
+                Paragraph(f.get("name", ""), cell),
+                Paragraph(f.get("existing_skill", "-"), cell),
+                Paragraph(f.get("n8n_nodes", "-"), cell),
                 f.get("stack_fit", "-"),
                 f.get("build_hours", "-"),
                 f.get("feasibility", "-"),
             ])
         story.append(make_standard_table(
             feas_table_data,
-            [0.3 * inch, 1.8 * inch, 1.1 * inch, 0.8 * inch, 0.7 * inch, 0.5 * inch, 0.8 * inch]
+            [0.3 * inch, 2.0 * inch, 1.2 * inch, 1.0 * inch, 0.6 * inch, 0.5 * inch, 0.8 * inch]
         ))
 
     story.append(Spacer(1, 12))
