@@ -348,9 +348,12 @@ class DonutChartFlowable(Flowable):
         c.saveState()
 
         total = sum(self.values) if self.values else 1
-        cx, cy = 90, self._height / 2 - 10
-        r_outer = 65
-        r_inner = 38
+        title_offset = 24 if self.title else 0
+        available_h = self._height - title_offset - 10  # space for ring
+        r_outer = min(65, available_h / 2)
+        r_inner = r_outer * 0.58
+        cx = r_outer + 25
+        cy = title_offset + available_h / 2 - 10
 
         y_title = self._height - 10
         if self.title:
@@ -394,7 +397,7 @@ class DonutChartFlowable(Flowable):
         c.drawCentredString(cx, cy - 10, "total")
 
         # Legend on the right
-        legend_x = 180
+        legend_x = cx + r_outer + 25
         legend_y = cy + (len(self.labels) * 22) / 2
         for i, (label, val) in enumerate(zip(self.labels, self.values)):
             y = legend_y - i * 22
