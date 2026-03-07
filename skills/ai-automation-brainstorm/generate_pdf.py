@@ -69,6 +69,17 @@ CATEGORY_COLORS = {
     "EXPERIMENTAL": SCORE_GRAY,
 }
 
+# Acronyms to preserve in title casing
+ACRONYMS = {"CRM", "AI", "API", "ICP", "SDR", "BDR", "ERP", "KPI", "ROI", "SaaS",
+            "SEO", "SMM", "SQL", "ETL", "LLM", "RAG", "PDF", "CSV", "URL", "SMS",
+            "B2B", "B2C", "HR", "IT", "QA", "ML", "NLP", "OCR", "RPA"}
+
+
+def smart_title(text):
+    """Title-case text while preserving known acronyms."""
+    words = text.title().split()
+    return " ".join(w.upper() if w.upper() in ACRONYMS else w for w in words)
+
 
 def load_data():
     """Load brainstorm data from JSON file."""
@@ -174,47 +185,74 @@ def build_pdf():
     story.append(Spacer(1, 2 * inch))
     story.append(Paragraph("AI AUTOMATION BRAINSTORM", styles['TitlePage']))
     story.append(HRFlowable(width="40%", thickness=3, color=ACCENT, spaceAfter=16, spaceBefore=8))
-    subtitle = domain.title()
+    subtitle = smart_title(domain)
     if problem_area:
-        subtitle += f" -- {problem_area.title()}"
+        subtitle += f" -- {smart_title(problem_area)}"
     story.append(Paragraph(subtitle, styles['TitleSub']))
     story.append(Paragraph(date, styles['TitleDate']))
     story.append(Spacer(1, 0.8 * inch))
 
-    # Cost box
-    cost_data = [
-        [Paragraph('<b>Run Cost</b>', styles['Body']), Paragraph(f'<b>{cost}</b>', styles['Body'])],
+    # Summary stats box
+    discoveries = data.get("discoveries", [])
+    feasibility = data.get("feasibility", [])
+    spec_cards = data.get("spec_cards", [])
+    num_discoveries = len(discoveries)
+    num_feasible = len(feasibility)
+    num_cards = len(spec_cards)
+
+    summary_header = [
+        Paragraph('<b>Solutions Found</b>', styles['Body']),
+        Paragraph('<b>Feasibility Checked</b>', styles['Body']),
+        Paragraph('<b>Spec Cards</b>', styles['Body']),
+        Paragraph('<b>Run Cost</b>', styles['Body']),
     ]
-    cost_table = Table(cost_data, colWidths=[2 * inch, 1.5 * inch])
-    cost_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), ACCENT_LIGHT),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
+    summary_vals = [
+        Paragraph(f'<b>{num_discoveries}</b>', styles['Body']),
+        Paragraph(f'<b>{num_feasible}</b>', styles['Body']),
+        Paragraph(f'<b>{num_cards}</b>', styles['Body']),
+        Paragraph(f'<b>{cost}</b>', styles['Body']),
+    ]
+    summary_table = Table([summary_header, summary_vals],
+                          colWidths=[1.7 * inch, 1.8 * inch, 1.3 * inch, 1.3 * inch])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), ACCENT),
+        ('TEXTCOLOR', (0, 0), (-1, 0), white),
+        ('BACKGROUND', (0, 1), (-1, 1), ACCENT_LIGHT),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
         ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
     ]))
-    story.append(cost_table)
+    story.append(summary_table)
     story.append(PageBreak())
 
     # ===== TABLE OF CONTENTS =====
     story.append(Paragraph("Table of Contents", styles['SectionHead']))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=12))
+
+    # Count cards by category
+    cat_counts = {}
+    for card in spec_cards:
+        cat = card.get("category", "EXPERIMENTAL")
+        cat_counts[cat] = cat_counts.get(cat, 0) + 1
+
     toc_items = [
-        "Phase 1: Solution Discovery",
-        "Phase 2: Feasibility Matrix",
-        "Phase 3: Automation Spec Cards",
-        "    Quick Wins",
-        "    High Value",
-        "    Strategic",
-        "    Experimental",
-        "Sources",
+        (f"Phase 1: Solution Discovery ({num_discoveries} items)", 20),
+        (f"Phase 2: Feasibility Matrix ({num_feasible} items)", 20),
+        (f"Phase 3: Automation Spec Cards ({num_cards} cards)", 20),
     ]
-    for item in toc_items:
-        indent = 40 if item.startswith("    ") else 20
+    for cat_key, cat_label in [("QUICK WIN", "Quick Wins"), ("HIGH VALUE", "High Value"),
+                                ("STRATEGIC", "Strategic"), ("EXPERIMENTAL", "Experimental")]:
+        count = cat_counts.get(cat_key, 0)
+        if count > 0:
+            toc_items.append((f"{cat_label} ({count})", 40))
+    toc_items.append(("Sources", 20))
+
+    for text, indent in toc_items:
         s = ParagraphStyle('toc_tmp', parent=styles['TOCEntry'], leftIndent=indent)
-        story.append(Paragraph(item.strip(), s))
-    story.append(PageBreak())
+        story.append(Paragraph(text, s))
+
+    story.append(Spacer(1, 20))
 
     # ===== PHASE 1: DISCOVERY =====
     story.append(Paragraph("Phase 1: Solution Discovery", styles['SectionHead']))
@@ -226,7 +264,6 @@ def build_pdf():
     ))
     story.append(Spacer(1, 8))
 
-    discoveries = data.get("discoveries", [])
     if discoveries:
         cell = styles['Body']
         disc_table_data = [["#", "Automation / Solution", "Source", "Target Problem", "Proven?"]]
@@ -240,15 +277,14 @@ def build_pdf():
             ])
         story.append(make_standard_table(
             disc_table_data,
-            [0.3 * inch, 2.4 * inch, 1.3 * inch, 2.2 * inch, 0.5 * inch]
+            [0.3 * inch, 2.3 * inch, 1.3 * inch, 2.1 * inch, 0.7 * inch]
         ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 16))
 
     # ===== PHASE 2: FEASIBILITY =====
     story.append(Paragraph("Phase 2: Feasibility Matrix", styles['SectionHead']))
     story.append(HRFlowable(width="100%", thickness=2, color=ACCENT, spaceAfter=10))
 
-    feasibility = data.get("feasibility", [])
     if feasibility:
         cell = styles['Body']
         feas_table_data = [["#", "Automation", "Existing Skill?", "n8n Nodes?", "Stack Fit", "Build", "Status"]]
@@ -270,33 +306,28 @@ def build_pdf():
     story.append(Spacer(1, 12))
     story.append(Paragraph("<b>Legend:</b> Ready = build today | Needs Work = missing 1-2 components | "
                            "Blocked = missing critical integration", styles['SmallMuted']))
-    story.append(PageBreak())
+    story.append(Spacer(1, 16))
 
     # ===== PHASE 3: SPEC CARDS =====
     story.append(Paragraph("Phase 3: Automation Spec Cards", styles['SectionHead']))
     story.append(HRFlowable(width="100%", thickness=2, color=ACCENT, spaceAfter=14))
 
-    spec_cards = data.get("spec_cards", [])
     current_category = None
 
     for card in spec_cards:
         cat = card.get("category", "EXPERIMENTAL")
         cat_color = CATEGORY_COLORS.get(cat, SCORE_GRAY)
 
-        # Category banner
+        # Category banner (not inside KeepTogether -- it's a section divider)
         if cat != current_category:
             current_category = cat
             if cat == "QUICK WIN":
                 label = "QUICK WINS -- Build This Week"
             elif cat == "HIGH VALUE":
-                if spec_cards.index(card) > 0:
-                    story.append(PageBreak())
                 label = "HIGH VALUE -- Worth Investment"
             elif cat == "STRATEGIC":
-                story.append(PageBreak())
                 label = "STRATEGIC -- Plan For"
             else:
-                story.append(PageBreak())
                 label = "EXPERIMENTAL -- Backlog"
 
             cat_banner = Table(
@@ -311,6 +342,9 @@ def build_pdf():
             ]))
             story.append(cat_banner)
             story.append(Spacer(1, 12))
+
+        # Build card elements list for KeepTogether
+        card_elements = []
 
         # Card header bar
         header_data = [[
@@ -327,14 +361,14 @@ def build_pdf():
             ('RIGHTPADDING', (-1, 0), (-1, -1), 10),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
-        story.append(header_table)
-        story.append(Spacer(1, 4))
+        card_elements.append(header_table)
+        card_elements.append(Spacer(1, 4))
 
         # Business outcome
-        story.append(Paragraph(f'<b>Business Outcome:</b> {card.get("outcome", "")}', styles['Body']))
+        card_elements.append(Paragraph(f'<b>Business Outcome:</b> {card.get("outcome", "")}', styles['Body']))
 
         # Architecture
-        story.append(Paragraph(f'<b>Architecture:</b> {card.get("architecture", "")}', styles['Body']))
+        card_elements.append(Paragraph(f'<b>Architecture:</b> {card.get("architecture", "")}', styles['Body']))
 
         # Tech stack
         tech = card.get("tech_stack", {})
@@ -349,13 +383,13 @@ def build_pdf():
             if tech.get("skills"):
                 tech_parts.append(f'Skills: {", ".join(tech["skills"])}')
             for tp in tech_parts:
-                story.append(Paragraph(f"&bull; {tp}", styles['BulletCustom']))
+                card_elements.append(Paragraph(f"&bull; {tp}", styles['BulletCustom']))
 
         # Build time + template
         build_time = card.get("build_time", "")
         template_id = card.get("template_id")
         template_str = f"Template #{template_id}" if template_id else "Build from scratch"
-        story.append(Paragraph(f'<b>Build Time:</b> {build_time} | <b>Template:</b> {template_str}',
+        card_elements.append(Paragraph(f'<b>Build Time:</b> {build_time} | <b>Template:</b> {template_str}',
                                styles['Body']))
 
         # Revenue model
@@ -370,14 +404,14 @@ def build_pdf():
                 rev_parts.append(f'Usage: {rev["usage"]}')
             if rev.get("tier"):
                 rev_parts.append(f'Tier: {rev["tier"]}')
-            story.append(Paragraph(f'<b>Revenue:</b> {" | ".join(rev_parts)}', styles['Body']))
+            card_elements.append(Paragraph(f'<b>Revenue:</b> {" | ".join(rev_parts)}', styles['Body']))
 
         # Implementation steps
         steps = card.get("steps", [])
         if steps:
-            story.append(Paragraph("<b>Implementation:</b>", styles['BodyBold']))
+            card_elements.append(Paragraph("<b>Implementation:</b>", styles['BodyBold']))
             for i, step in enumerate(steps, 1):
-                story.append(Paragraph(f"{i}. {step}", styles['BulletCustom']))
+                card_elements.append(Paragraph(f"{i}. {step}", styles['BulletCustom']))
 
         # Score breakdown table
         scores = card.get("scores", {})
@@ -405,24 +439,39 @@ def build_pdf():
                 ('BACKGROUND', (-1, 1), (-1, 1), ACCENT_LIGHT),
                 ('FONTNAME', (-1, 1), (-1, 1), 'Helvetica-Bold'),
             ]))
-            story.append(score_table)
+            card_elements.append(score_table)
 
-        story.append(Spacer(1, 16))
+        card_elements.append(Spacer(1, 16))
+
+        # Wrap card in KeepTogether to prevent mid-card page breaks
+        story.append(KeepTogether(card_elements))
 
     # ===== SOURCES =====
     story.append(PageBreak())
     story.append(Paragraph("Sources", styles['SectionHead']))
     story.append(HRFlowable(width="100%", thickness=2, color=ACCENT, spaceAfter=10))
 
+    link_style = ParagraphStyle('link', parent=styles['BulletCustom'], textColor=SCORE_BLUE)
     sources = data.get("sources", [])
     for s in sources:
-        story.append(Paragraph(f"&bull; {s}", styles['BulletCustom']))
+        # Parse "Name - https://url" format and make URLs clickable
+        if ' - http' in s:
+            parts = s.split(' - ', 1)
+            name = parts[0]
+            url = parts[1].strip()
+            story.append(Paragraph(
+                f'&bull; {name} - <a href="{url}" color="blue">{url}</a>', styles['BulletCustom']))
+        elif s.startswith('http'):
+            story.append(Paragraph(
+                f'&bull; <a href="{s}" color="blue">{s}</a>', styles['BulletCustom']))
+        else:
+            story.append(Paragraph(f"&bull; {s}", styles['BulletCustom']))
 
     # Footer
     story.append(Spacer(1, 30))
     story.append(HRFlowable(width="100%", thickness=1, color=BORDER_COLOR, spaceAfter=8))
     story.append(Paragraph(
-        f"Generated by AI Automation Brainstorm | {domain.title()} | {date}",
+        f"Generated by AI Automation Brainstorm | {smart_title(domain)} | {date}",
         ParagraphStyle('footer', parent=styles['SmallMuted'], alignment=TA_CENTER)
     ))
 
