@@ -1,0 +1,31 @@
+--- a/claude_stt/keyboard.py
++++ b/claude_stt/keyboard.py
+@@ -72,8 +72,6 @@
+             timeout=10,
+         )
+         if result.returncode == 0:
+-            if config.sound_effects:
+-                play_sound("complete")
+             return True
+         _logger.warning("wtype failed: %s", result.stderr.decode(errors="replace"))
+         return False
+@@ -195,9 +193,6 @@
+         kb = get_keyboard()
+         kb.type(text)
+
+-        if config.sound_effects:
+-            play_sound("complete")
+-
+         return True
+     except Exception:
+         # Fall back to clipboard on any error
+@@ -227,9 +222,6 @@
+
+         pyperclip.copy(text)
+
+-        if config.sound_effects:
+-            play_sound("complete")
+-
+         return True
+     except Exception:
+         if config.sound_effects:

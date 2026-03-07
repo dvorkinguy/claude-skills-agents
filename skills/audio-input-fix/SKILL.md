@@ -63,10 +63,25 @@ Installs a systemd user service that sets mic to 85% on login.
 
 For detailed issue-specific fixes, see [references/troubleshooting.md](references/troubleshooting.md).
 
+## STT Plugin Patch Persistence
+
+Custom patches to `sounds.py`, `keyboard.py`, and `whisper.py` are stored in `patches/` (unified diffs) and `patched-files/` (full fallback copies). These are auto-applied on every session start via a SessionStart hook.
+
+### Manual re-apply after cache clear
+```bash
+bash ~/.claude/skills/audio-input-fix/scripts/apply-stt-patches.sh
+```
+
+### What's patched
+- **sounds.py** — Custom start/stop sounds (`message-new-instant.oga`, `power-unplug.oga`) + louder start via `paplay --volume 90000`
+- **keyboard.py** — Removed all `play_sound("complete")` calls (no bell after text output)
+- **whisper.py** — Better transcribe params: `language="en"`, `beam_size=5`, `best_of=3`, `vad_filter=True`, `temperature=0.0`
+
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
 | `scripts/audio-doctor.sh` | Main diagnostic/fix tool (status, fix, switch, boost) |
+| `scripts/apply-stt-patches.sh` | Re-apply STT plugin patches after cache clear/update |
 | `scripts/setup-mic-persist.sh` | Install systemd service for boot-time mic volume |
 | `scripts/stt-watchdog.sh` | Background monitor to auto-fix volume and duplicate daemons |

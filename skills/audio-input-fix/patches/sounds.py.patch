@@ -1,0 +1,44 @@
+--- a/claude_stt/sounds.py
++++ b/claude_stt/sounds.py
+@@ -22,8 +22,8 @@
+
+ # Linux sound paths (common locations)
+ LINUX_SOUNDS = {
+-    "start": "/usr/share/sounds/freedesktop/stereo/device-added.oga",
+-    "stop": "/usr/share/sounds/freedesktop/stereo/device-removed.oga",
++    "start": "/usr/share/sounds/freedesktop/stereo/message-new-instant.oga",
++    "stop": "/usr/share/sounds/freedesktop/stereo/power-unplug.oga",
+     "complete": "/usr/share/sounds/freedesktop/stereo/complete.oga",
+     "error": "/usr/share/sounds/freedesktop/stereo/dialog-error.oga",
+     "warning": "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga",
+@@ -77,19 +77,24 @@
+         _logger.debug("Sound file missing: %s", sound_file)
+         return
+
+-    # Try pw-play first (PipeWire native) when the PipeWire socket is present
+-    if shutil.which("pw-play") and _pipewire_socket_available():
++    # Volume boost for start sound (paplay volume is in 0-65536 range, 65536=100%)
++    volume_arg = []
++    if event == "start" and shutil.which("paplay"):
++        volume_arg = ["--volume", "90000"]  # ~137% louder
++
++    # Try paplay first (supports --volume for louder start)
++    if shutil.which("paplay"):
+         subprocess.Popen(
+-            ["pw-play", sound_file],
++            ["paplay"] + volume_arg + [sound_file],
+             stdout=subprocess.DEVNULL,
+             stderr=subprocess.DEVNULL,
+         )
+         return
+
+-    # Try paplay (PulseAudio)
+-    if shutil.which("paplay"):
++    # Try pw-play (PipeWire native) when the PipeWire socket is present
++    if shutil.which("pw-play") and _pipewire_socket_available():
+         subprocess.Popen(
+-            ["paplay", sound_file],
++            ["pw-play", sound_file],
+             stdout=subprocess.DEVNULL,
+             stderr=subprocess.DEVNULL,
+         )
